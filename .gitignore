@@ -40,6 +40,9 @@ obj/
 *.userosscache
 *.sln.docstates
 *obj
+*.sln
+.sln
+*.sln
 
 ## IDE/editor
 .vscode/
