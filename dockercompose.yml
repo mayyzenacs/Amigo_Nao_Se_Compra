@@ -1,24 +1,26 @@
 services:
-  db:
-    image: postgres:18-alpine
-    container_name: ansc_db
+  amigo-api:
+    image: ghcr.io/seu-usuario/amigo-api:latest
+    container_name: amigo_api_backend
+    restart: always
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "${DB_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql
-
-  api:
-    build: ./AmigoNcompra-api
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/${DB_NAME}
     ports:
       - "${API_PORT}:8080"
-    environment:
-      ConnectionStrings__DefaultConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
-    depends_on:
-      - db
-
-volumes:
-  postgres_data:
+    volumes:
+      - ./database:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

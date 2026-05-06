@@ -20,4 +20,6 @@ app.UseCors();
 app.MapOngEndpoints();
 app.MapPetEndpoints();
 
+app.MapGet("/health", () => Results.Ok());
+
 app.Run();
