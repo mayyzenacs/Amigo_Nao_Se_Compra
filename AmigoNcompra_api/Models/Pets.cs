@@ -4,7 +4,7 @@ namespace AmigoNcompra_api.Models;
 
 public class Pet
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [Required]
     [MaxLength(50)] 
