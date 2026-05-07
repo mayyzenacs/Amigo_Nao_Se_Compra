@@ -1,3 +1,4 @@
+using AmigoNcompra_api.Data;
 using Microsoft.EntityFrameworkCore;
 namespace AmigoNcompra_api.Extensions;
 
@@ -7,7 +8,8 @@ public static class OngEndpoints
     {
         var group = app.MapGroup("/api");
 
-       
+        app.MapGet("/ongs", async (AppDbContext db) => 
+            await db.Ong.ToListAsync());
 
         
     }

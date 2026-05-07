@@ -1,7 +1,7 @@
 services:
   amigo-api:
-    image: ghcr.io/seu-usuario/amigo-api:latest
-    container_name: amigo_api_backend
+    image: ghcr.io/mayyzenacs/ansc-api:latest
+    container_name: amigoncompra_api
     restart: always
     environment:
       - ASPNETCORE_URLS=http://+:8080
