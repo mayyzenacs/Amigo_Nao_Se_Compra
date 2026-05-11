@@ -33,7 +33,7 @@ namespace AmigoNcompra_api.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Contact")
@@ -48,6 +48,7 @@ namespace AmigoNcompra_api.Migrations
 
                     b.Property<string>("NormalizedCity")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Photo")
@@ -68,6 +69,8 @@ namespace AmigoNcompra_api.Migrations
 
                     b.HasIndex("Name")
                         .IsUnique();
+
+                    b.HasIndex("NormalizedCity");
 
                     b.HasIndex("Website")
                         .IsUnique();
@@ -92,6 +95,9 @@ namespace AmigoNcompra_api.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Photo")
+                        .IsUnique();
 
                     b.ToTable("Pets");
                 });

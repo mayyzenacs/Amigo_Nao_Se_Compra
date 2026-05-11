@@ -16,24 +16,35 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Ong>()
-            .HasIndex(o => o.City);
+        modelBuilder.Entity<Ong>(entity =>
+        {
+            entity.HasIndex(o => o.Name).IsUnique();
+            entity.HasIndex(o => o.Website).IsUnique();
+            entity.HasIndex(o => o.Contact).IsUnique();
 
-        modelBuilder.Entity<Ong>()
-            .HasIndex(o => o.Name)
-            .IsUnique();
+            entity.HasIndex(o => o.NormalizedCity);
+            entity.Property(o => o.City)
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(o => o.NormalizedCity)
+                .IsRequired()
+                .HasMaxLength(100);
 
-        modelBuilder.Entity<Ong>()
-            .HasIndex(o => o.Website)
-            .IsUnique();
+            entity.Property(o => o.Photo)
+                .HasMaxLength(500); 
+        });
 
-        modelBuilder.Entity<Ong>()
-            .HasIndex(o => o.Contact)
-            .IsUnique();
+        modelBuilder.Entity<Pet>(entity =>
+        {
+            entity.Property(p => p.Name)
+                .IsRequired()
+                .HasMaxLength(50);
 
-        modelBuilder.Entity<Ong>()
-            .Property(o => o.Photo)
-            .HasMaxLength(500);
+            entity.HasIndex(p => p.Photo)
+                .IsUnique();
+            entity.Property(p => p.Photo)
+                .HasMaxLength(500);
+        });
 
         base.OnModelCreating(modelBuilder);
     }

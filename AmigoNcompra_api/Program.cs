@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AmigoNcompra_api.Data;
 using AmigoNcompra_api.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -7,12 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                        ?? "Data Source=amigonaosecompra.db";
 
+builder.Services.ConfigureHttpJsonOptions(options => {
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
 
 builder.Services.AddCors(options => {
-    options.AddDefaultPolicy(policy => 
-        policy.WithOrigins("https://mayyzenacs.github.io")
+    options.AddPolicy("AllowReact", policy => 
+        policy.WithOrigins("http://localhost:5173")
               .AllowAnyMethod()
               .AllowAnyHeader());
 });
@@ -39,7 +44,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseCors();
+app.UseCors("AllowReact");
 
 app.MapOngEndpoints();
 app.MapPetEndpoints();
