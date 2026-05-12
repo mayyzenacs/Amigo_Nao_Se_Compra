@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using AmigoNcompra_api.DTOS;
 using AmigoNcompra_api.Models;
 using AmigoNcompra_api.utils;
+using CloudinaryDotNet.Actions;
+using CloudinaryDotNet;
 
 namespace AmigoNcompra_api.Extensions;
 
@@ -12,12 +14,32 @@ public static class OngEndpoints
     {
         var group = app.MapGroup("/api");
 
+        group.MapGet("cities/list", async (AppDbContext db) => 
+            await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
+
         group.MapGet("ongs", async (AppDbContext db) => 
             await db.Ongs.ToListAsync());
 
-        group.MapPost("ongs/add", async (OngRequest request, AppDbContext db) =>
+        group.MapPost("ongs/add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("name is required");
+
+            // string finalOngPhoto = request.Photo;
+
+            // if(!string.IsNullOrWhiteSpace(request.Photo))
+            // {
+            //     var upload = new ImageUploadParams()
+            //     {
+            //         File = new FileDescription(request.Photo),
+            //         Folder = "amigo-nao-se-compra/ongs",
+            //         PublicId = $"ong_{Guid.NewGuid()}"
+            //     };
+
+            // var uploadResult = await cloudinary.UploadAsync(upload);
+
+            // if (uploadResult.Error == null) finalOngPhoto = uploadResult.SecureUrl.ToString();
+    
+            // }
 
             var newOng = new Ong
             {
@@ -50,9 +72,12 @@ public static class OngEndpoints
             if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("city name is required to search");
 
             var normalizeCity = city.SearchToken();
-            var query = db.Ongs.AsNoTracking();
 
-            var ongsFound = await query
+            var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
+            if (!cityExists) return Results.BadRequest(new { message = "Essa cidade não consta no mapa do IBGE." });
+          
+
+            var ongsFound = await db.Ongs.AsTracking()
                 .Where(o => o.NormalizedCity == normalizeCity)
                 .ToListAsync();
 
@@ -72,7 +97,8 @@ public static class OngEndpoints
                 });
             }
 
-            return Results.Ok(ongsFound); 
+            return Results.Ok(new SearchResponse(ongsFound));
         });
+        
     }
 }

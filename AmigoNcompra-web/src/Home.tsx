@@ -1,18 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PawPrint, Info, MapPin, Search, Heart } from "lucide-react";
+import api from "./services/api";
 
 export function Home() {
+  const [validCities, setValidCities] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    api
+      .get<string[]>("cities/list")
+      .then((res) => setValidCities(res.data))
+      .catch((err) => console.error("Erro ao carregar cidades:", err));
+  }, []);
+
+  const filteredSuggestions = useMemo(() => {
+    const searchTerm = city.trim().toLowerCase();
+    if (searchTerm.length < 3) return [];
+
+    return validCities
+      .filter((c) => c.toLowerCase().includes(searchTerm))
+      .slice(0, 10);
+  }, [city, validCities]);
+
+  const isCityValid = validCities.some(
+    (c) => c.toLowerCase() === city.trim().toLowerCase(),
+  );
+
   const handleSearch = () => {
     const trimmedCity = city.trim();
-    if (trimmedCity) {
+    if (trimmedCity && isCityValid) {
       navigate(`/ongs?city=${encodeURIComponent(trimmedCity)}`);
     }
   };
-
   return (
     <div className="min-h-screen bg-orange-50 text-slate-800 font-sans selection:bg-orange-200">
       <section className="w-full bg-black py-12 md:py-16 text-white relative overflow-hidden border-b-8 border-orange-700/30">
@@ -95,26 +116,47 @@ export function Home() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative group">
               <MapPin
-                className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors"
+                className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${
+                  !isCityValid && city
+                    ? "text-red-400"
+                    : "text-slate-400 group-focus-within:text-orange-500"
+                }`}
                 size={24}
               />
               <input
                 type="text"
+                list="cities-list"
                 placeholder="Qual sua cidade? (Ex: Osasco)"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 pl-16 text-lg font-semibold focus:outline-none focus:border-orange-400 focus:bg-white transition-all shadow-inner"
+                className={`w-full bg-slate-50 border-2 rounded-2xl p-6 pl-16 text-lg font-semibold focus:outline-none transition-all shadow-inner ${
+                  !isCityValid && city
+                    ? "border-red-200 focus:border-red-400"
+                    : "border-slate-100 focus:border-orange-400 focus:bg-white"
+                }`}
               />
+              <datalist id="cities-list">
+                {filteredSuggestions.map((c, index) => (
+                  <option key={index} value={c} />
+                ))}
+              </datalist>
             </div>
 
             <button
               onClick={handleSearch}
-              className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl px-12 py-6 text-xl font-black uppercase transition-all flex items-center justify-center gap-3 shadow-lg shadow-orange-500/25 active:scale-95"
+              disabled={!isCityValid}
+              className="bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:shadow-none text-white rounded-2xl px-12 py-6 text-xl font-black uppercase transition-all flex items-center justify-center gap-3 shadow-lg shadow-orange-500/25 active:scale-95"
             >
               Buscar ONGs <Search size={24} strokeWidth={3} />
             </button>
           </div>
+
+          {!isCityValid && city.length > 2 && (
+            <p className="text-red-500 font-bold text-sm mt-3 ml-2 animate-pulse">
+              ⚠️ Esta cidade não foi encontrada. Verifique a grafia!
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

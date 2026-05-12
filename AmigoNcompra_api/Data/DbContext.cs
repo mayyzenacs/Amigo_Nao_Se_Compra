@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Ong> Ongs => Set<Ong>(); 
     public DbSet<Pet> Pets => Set<Pet>();
+    public DbSet<CityReference> Cities => Set<CityReference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,12 @@ public class AppDbContext : DbContext
                 .IsUnique();
             entity.Property(p => p.Photo)
                 .HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<CityReference>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.HasIndex(c => c.NormalizedName); 
         });
 
         base.OnModelCreating(modelBuilder);

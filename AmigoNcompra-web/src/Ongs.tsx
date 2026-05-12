@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Globe, DollarSign, ArrowLeft, Loader2, Heart } from "lucide-react";
 import api from "./services/api";
-import type { Ong, SearchResponse } from "./types/api"; // Importe o novo tipo aqui
+import type { Ong, SearchResponse } from "./types/api";
 
 export default function Ongs() {
   const location = useLocation();
