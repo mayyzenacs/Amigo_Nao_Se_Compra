@@ -6,13 +6,14 @@ namespace AmigoNcompra_api.Models;
 [Index(nameof(City))] 
 public class Ong
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [Required] [MaxLength(100)]
     public required string Name { get; set; }
 
     [Required] [MaxLength(50)]
     public required string City { get; set; }
+    public required string NormalizedCity { get; set; }
 
     [MaxLength(200)]
     public string? Website { get; set; }
@@ -25,5 +26,8 @@ public class Ong
 
     [Required] [MaxLength(250)]
     public required string About { get; set; } = string.Empty;
-    
+
+    [Required]
+    [MaxLength(500)] 
+    public required string Photo { get; set; }
 }
