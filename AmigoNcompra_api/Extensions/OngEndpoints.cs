@@ -12,15 +12,15 @@ public static class OngEndpoints
 {
     public static void MapOngEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api");
+        var group = app.MapGroup("/ongs");
 
         group.MapGet("cities/list", async (AppDbContext db) => 
             await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
 
-        group.MapGet("ongs", async (AppDbContext db) => 
-            await db.Ongs.ToListAsync());
+        group.MapGet("/", async (AppDbContext db) => 
+            await db.Ongs.AsNoTracking().ToListAsync());
 
-        group.MapPost("ongs/add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
+        group.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
@@ -67,7 +67,7 @@ public static class OngEndpoints
             return Results.Created($"/ongs/{newOng.Id}", newOng);
         });
 
-        group.MapGet("ongs/search", async (string? city, AppDbContext db) =>
+        group.MapGet("search", async (string? city, AppDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
@@ -77,7 +77,8 @@ public static class OngEndpoints
             if (!cityExists) return Results.BadRequest(new { message = "CITY_INVALID" });
           
 
-            var ongsFound = await db.Ongs.AsTracking()
+            var ongsFound = await db.Ongs
+                .AsTracking()
                 .Where(o => o.NormalizedCity == normalizeCity)
                 .ToListAsync();
 
@@ -99,7 +100,7 @@ public static class OngEndpoints
             return Results.Ok(new SearchResponse(ongsFound));
         });
 
-        // group.MapPut("ongs/{id:Guid}", async (Guid id, OngUpdateRequest request, ))
+       
         
     }
 }

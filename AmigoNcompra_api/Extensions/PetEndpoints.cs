@@ -4,6 +4,7 @@ using AmigoNcompra_api.Models;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
+using Superpower.Model;
 
 namespace AmigoNcompra_api.Extensions;
 
@@ -11,12 +12,12 @@ public static class PetEndpoints
 {
     public static void MapPetEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api");
+        var group = app.MapGroup("/pets");
 
-        group.MapGet("pets", async (AppDbContext db) => 
-            await db.Pets.ToListAsync());
+        group.MapGet("/", async (AppDbContext db) => 
+            await db.Pets.AsNoTracking().ToListAsync());
 
-        group.MapPost("pets/add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
+        group.MapPost("add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("PET_NAME_REQUIRED");
 
@@ -28,7 +29,7 @@ public static class PetEndpoints
                 {
                     File = new FileDescription(request.Photo), 
                     Folder = "amigo-nao-se-compra/pets", 
-                    PublicId = $"ong_{Guid.NewGuid()}"
+                    PublicId = $"pet_{Guid.NewGuid()}"
                 };
 
             var uploadResult = await cloudinary.UploadAsync(upload);
@@ -56,7 +57,7 @@ public static class PetEndpoints
             return Results.Created($"/ongs/{newPet.Id}", newPet);
         });
 
-        group.MapGet("pets/showcase", async (AppDbContext db) =>
+        group.MapGet("showcase", async (AppDbContext db) =>
         {
             var randomShowcase = await db.Pets
                 .AsNoTracking()
@@ -67,6 +68,29 @@ public static class PetEndpoints
             return Results.Ok(randomShowcase);
         });
 
-        
+        group.MapPut("update/{id:Guid}", async (Guid id, PetUpdateRequest request, AppDbContext db) => {
+
+            var affectedRows = await db.Pets
+                .Where(p => p.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.Name, request.NewName)
+                .SetProperty(p => p.Photo, request.NewPhoto));
+
+            return affectedRows > 0 
+                ? Results.Ok(new { message = "PET_UPDATED" }) 
+                : Results.NotFound(new { code = "PET_NOT_FOUND" });
+        });
+
+        group.MapDelete("delete/{id:Guid}", async (Guid id, AppDbContext db)=>
+        {
+            var affectedRows = await db.Pets
+                .Where(p => p.Id == id)
+                .ExecuteDeleteAsync();
+
+            return affectedRows > 0 
+                ? Results.NoContent() 
+                : Results.NotFound(new { code = "PET_NOT_FOUND" });
+
+        });
     }
 }

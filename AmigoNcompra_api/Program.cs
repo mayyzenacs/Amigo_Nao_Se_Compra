@@ -59,8 +59,10 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("AllowReact");
 
-app.MapOngEndpoints();
-app.MapPetEndpoints();
+var apiGroup = app.MapGroup("/api");
+
+apiGroup.MapOngEndpoints();
+apiGroup.MapPetEndpoints();
 
 app.MapGet("/health", () => Results.Ok());
 
