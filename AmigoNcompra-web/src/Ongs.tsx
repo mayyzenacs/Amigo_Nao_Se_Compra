@@ -1,8 +1,29 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Globe, DollarSign, ArrowLeft, Loader2, Heart } from "lucide-react";
+import {
+  Globe,
+  DollarSign,
+  ArrowLeft,
+  Loader2,
+  Heart,
+  MapPin,
+} from "lucide-react";
 import api from "./services/api";
 import type { Ong, SearchResponse } from "./types/api";
+
+const UI_MESSAGES: Record<string, string> = {
+  CITY_NAME_REQUIRED: "O campo cidade é obrigatório.",
+  CITY_INVALID: "Essa cidade não foi encontrada no registro.",
+  ERR_ONG_NOT_FOUND:
+    "Infelizmente ainda não temos ONGs cadastradas na sua cidade.",
+};
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  Adocao: "Adoção",
+  RecebeDoacao: "Recebe Doações",
+  Resgate: "Resgate",
+  Castracao: "Castração",
+};
 
 export default function Ongs() {
   const location = useLocation();
@@ -24,7 +45,7 @@ export default function Ongs() {
         setResult(response.data);
       } catch (error) {
         console.error("Erro na integração:", error);
-        setResult({ data: [], message: "Erro ao conectar com o servidor." });
+        setResult({ data: [], code: "Erro ao conectar com o servidor." });
       } finally {
         setLoading(false);
       }
@@ -36,6 +57,7 @@ export default function Ongs() {
 
   const renderBadges = (activities: string) => {
     if (!activities) return null;
+
     const getStyle = (name: string) => {
       const n = name.trim().toLowerCase();
       if (n.includes("resgate")) return "bg-red-50 text-red-600 border-red-100";
@@ -43,17 +65,24 @@ export default function Ongs() {
         return "bg-blue-50 text-blue-600 border-blue-100";
       if (n.includes("adocao"))
         return "bg-green-50 text-green-600 border-green-100";
+      if (n.includes("recebedoacao"))
+        return "bg-blue-50 text-blue-400 border-blue-100";
       return "bg-slate-50 text-slate-500 border-slate-100";
     };
 
-    return activities.split(",").map((atv) => (
-      <span
-        key={atv}
-        className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${getStyle(atv)}`}
-      >
-        {atv.trim()}
-      </span>
-    ));
+    return activities.split(",").map((atv) => {
+      const rawValue = atv.trim();
+      const label = ACTIVITY_LABELS[rawValue] || rawValue;
+
+      return (
+        <span
+          key={rawValue}
+          className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${getStyle(rawValue)}`}
+        >
+          {label}
+        </span>
+      );
+    });
   };
 
   const renderOngCard = (ong: Ong) => (
@@ -78,6 +107,10 @@ export default function Ongs() {
           </div>
         </div>
       </div>
+      <div className="flex items-center gap-2 text-slate-500 font-bold uppercase text-xs mb-2">
+        <MapPin size={14} className="text-orange-500" />
+        <h2>{ong.city}</h2>
+      </div>
       <p className="text-slate-500 font-medium leading-relaxed line-clamp-3">
         {ong.about}
       </p>
@@ -89,9 +122,14 @@ export default function Ongs() {
         >
           <Globe size={18} /> Site Oficial
         </a>
-        <button className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-orange-500/20 uppercase text-xs tracking-widest">
+        <a
+          href={ong.contact}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-orange-500/20 uppercase text-xs tracking-widest"
+        >
           <DollarSign size={18} /> Como Doar
-        </button>
+        </a>
       </div>
     </div>
   );
@@ -119,7 +157,7 @@ export default function Ongs() {
             </p>
           </div>
         ) : (
-          <div className="space-y-20">
+          <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {result?.data.map(renderOngCard)}
             </div>
@@ -127,8 +165,8 @@ export default function Ongs() {
             {result?.data.length === 0 && (
               <div className="space-y-12">
                 <div className="bg-white p-16 rounded-[3rem] border-4 border-dashed border-orange-100 text-center">
-                  <p className="text-2xl font-black text-slate-400 uppercase italic mb-2">
-                    {result.message || "Nenhuma ONG encontrada nesta cidade."}
+                  <p className="text-xl font-black text-slate-400 uppercase italic mb-2">
+                    {UI_MESSAGES[result.code]}
                   </p>
                   <p className="text-orange-500 font-bold uppercase tracking-widest text-sm">
                     Mas não vá embora! Confira estas outras instituições:

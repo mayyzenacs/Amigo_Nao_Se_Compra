@@ -18,5 +18,5 @@ export interface Pet {
 export interface SearchResponse {
   data: Ong[];
   suggestions?: Ong[];
-  message?: string;
+  code: string;
 }

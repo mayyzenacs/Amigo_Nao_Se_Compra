@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using AmigoNcompra_api.Models;
+using AmigoNcompra_api.Models.Enums;
 
 namespace AmigoNcompra_api.DTOS; 
 

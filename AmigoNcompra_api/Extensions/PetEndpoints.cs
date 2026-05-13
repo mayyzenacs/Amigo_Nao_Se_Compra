@@ -18,7 +18,7 @@ public static class PetEndpoints
 
         group.MapPost("pets/add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("name is required");
+            if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("PET_NAME_REQUIRED");
 
             string finalPetPhoto = request.Photo;
 
@@ -50,7 +50,7 @@ public static class PetEndpoints
                 await db.SaveChangesAsync();
             }
             catch (DbUpdateException) {
-                return Results.Conflict( new { err = "an error occurred"});
+                return Results.Conflict( new { err = "INTERNAL_ERROR"});
             }
 
             return Results.Created($"/ongs/{newPet.Id}", newPet);

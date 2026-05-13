@@ -22,7 +22,7 @@ public static class OngEndpoints
 
         group.MapPost("ongs/add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("name is required");
+            if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
             // string finalOngPhoto = request.Photo;
 
@@ -61,7 +61,7 @@ public static class OngEndpoints
             }
             catch (DbUpdateException)
             {
-                return Results.Conflict("this ong already exists"); 
+                return Results.Conflict("ONG_ALREADY_EXISTS"); 
             }
 
             return Results.Created($"/ongs/{newOng.Id}", newOng);
@@ -69,12 +69,12 @@ public static class OngEndpoints
 
         group.MapGet("ongs/search", async (string? city, AppDbContext db) =>
         {
-            if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("city name is required to search");
+            if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
             var normalizeCity = city.SearchToken();
 
             var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
-            if (!cityExists) return Results.BadRequest(new { message = "Essa cidade não consta no mapa do IBGE." });
+            if (!cityExists) return Results.BadRequest(new { message = "CITY_INVALID" });
           
 
             var ongsFound = await db.Ongs.AsTracking()
@@ -89,16 +89,17 @@ public static class OngEndpoints
                     .Take(3)
                     .ToListAsync();
 
-                return Results.Ok(new 
-                { 
-                    message = $"No ongs found in {normalizeCity}.",
-                    suggestions = suggestions,
-                    data = ongsFound 
-                });
+                return Results.Ok(new SearchResponse(
+                    ongsFound,
+                    suggestions,
+                    "ERR_ONG_NOT_FOUND"
+                ));
             }
 
             return Results.Ok(new SearchResponse(ongsFound));
         });
+
+        // group.MapPut("ongs/{id:Guid}", async (Guid id, OngUpdateRequest request, ))
         
     }
 }
