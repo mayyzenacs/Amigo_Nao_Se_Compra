@@ -5,6 +5,7 @@ using AmigoNcompra_api.Models;
 using AmigoNcompra_api.utils;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
+using Microsoft.AspNetCore.Identity;
 
 namespace AmigoNcompra_api.Extensions;
 
@@ -26,20 +27,19 @@ public static class OngEndpoints
 
             // string finalOngPhoto = request.Photo;
 
-            // if(!string.IsNullOrWhiteSpace(request.Photo))
+            // if (!string.IsNullOrWhiteSpace(request.Photo))
             // {
-            //     var upload = new ImageUploadParams()
+            //     var result = await cloudinary.UploadAsync(new ImageUploadParams 
             //     {
             //         File = new FileDescription(request.Photo),
             //         Folder = "amigo-nao-se-compra/ongs",
             //         PublicId = $"ong_{Guid.NewGuid()}"
-            //     };
+            //     });
 
-            // var uploadResult = await cloudinary.UploadAsync(upload);
+            //     if (result.Error == null) finalOngPhoto = result.SecureUrl.ToString();
+            // } 
 
-            // if (uploadResult.Error == null) finalOngPhoto = uploadResult.SecureUrl.ToString();
-    
-            // }
+            // --->>> RETIRAR ANTES DA PRODUçÃO e ALTERAR REQUEST.PHOTO PARA FINALONGPHOTO. <<<-----
 
             var newOng = new Ong
             {
@@ -74,7 +74,7 @@ public static class OngEndpoints
             var normalizeCity = city.SearchToken();
 
             var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
-            if (!cityExists) return Results.BadRequest(new { message = "CITY_INVALID" });
+            if (!cityExists) return Results.BadRequest(new { code = "CITY_INVALID" });
           
 
             var ongsFound = await db.Ongs
@@ -93,14 +93,50 @@ public static class OngEndpoints
                 return Results.Ok(new SearchResponse(
                     ongsFound,
                     suggestions,
-                    "ERR_ONG_NOT_FOUND"
+                    "ONG_NOT_FOUND"
                 ));
             }
 
             return Results.Ok(new SearchResponse(ongsFound));
         });
 
-       
+        group.MapPut("update/{id:Guid}", async (Guid id, OngUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
+
+            string updateOngPhoto = request.Photo;
+
+            if (!string.IsNullOrWhiteSpace(request.Photo))
+            {
+                var upload = await cloudinary.UploadAsync(new ImageUploadParams {
+                    File = new FileDescription(request.Photo),
+                    Folder = "amigo-nao-se-compra/ongs",
+                    PublicId = $"ong_{Guid.NewGuid()}"});
+
+                updateOngPhoto = upload.SecureUrl.ToString();
+            }
+            
+            var affectedOng = await db.Ongs
+                .Where(o => o.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.Name, p => request.Name ?? p.Name)
+                .SetProperty(p => p.City, p => request.City ?? p.City)
+                .SetProperty(p => p.Website, p => request.Website ?? p.Website)
+                .SetProperty(p => p.Contact, p => request.Contact ?? p.Contact)
+                .SetProperty(p => p.Activities, p => request.Activities ?? p.Activities)
+                .SetProperty(p => p.About, p => request.About ?? p.About)
+                .SetProperty(p => p.Photo, p => updateOngPhoto ?? p.Photo)
+                );
+
+             return affectedOng > 0 ? Results.Ok(new { id, data = request, photo = updateOngPhoto }) : Results.NotFound(new { code = "ONG_NOT_FOUND" });
+        });
         
+        group.MapDelete("delete{id:Guid}", async (Guid id, AppDbContext db) =>
+        {
+            var affectedOng = await db.Ongs
+                .Where(o => o.Id == id)
+                .ExecuteDeleteAsync();
+
+            return affectedOng > 0 ? Results.NoContent() : Results.NotFound(new { code = "ONG_NOT_FOUND" });
+
+        });
     }
 }

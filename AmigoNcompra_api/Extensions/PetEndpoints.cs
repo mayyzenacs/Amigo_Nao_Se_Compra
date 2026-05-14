@@ -4,6 +4,7 @@ using AmigoNcompra_api.Models;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
+using SQLitePCL;
 using Superpower.Model;
 
 namespace AmigoNcompra_api.Extensions;
@@ -25,18 +26,15 @@ public static class PetEndpoints
 
             if (!string.IsNullOrWhiteSpace(request.Photo))
             {
-                var upload = new ImageUploadParams()
+                var result = await cloudinary.UploadAsync(new ImageUploadParams 
                 {
-                    File = new FileDescription(request.Photo), 
-                    Folder = "amigo-nao-se-compra/pets", 
+                    File = new FileDescription(request.Photo),
+                    Folder = "amigo-nao-se-compra/pets",
                     PublicId = $"pet_{Guid.NewGuid()}"
-                };
+                });
 
-            var uploadResult = await cloudinary.UploadAsync(upload);
-
-            if (uploadResult.Error == null) finalPetPhoto = uploadResult.SecureUrl.ToString();
-
-            }
+                if (result.Error == null) finalPetPhoto = result.SecureUrl.ToString();
+            } 
 
             var newPet = new Pet
             {
@@ -49,13 +47,14 @@ public static class PetEndpoints
             {
                 db.Pets.Add(newPet);
                 await db.SaveChangesAsync();
+                
+                return Results.Created($"/pets/{newPet.Id}", newPet);
             }
-            catch (DbUpdateException) {
-                return Results.Conflict( new { err = "INTERNAL_ERROR"});
+            catch (DbUpdateException) 
+            {
+                return Results.Conflict(new { code = "INTERNAL_ERROR" });
             }
-
-            return Results.Created($"/ongs/{newPet.Id}", newPet);
-        });
+        }); 
 
         group.MapGet("showcase", async (AppDbContext db) =>
         {
@@ -68,28 +67,40 @@ public static class PetEndpoints
             return Results.Ok(randomShowcase);
         });
 
-        group.MapPut("update/{id:Guid}", async (Guid id, PetUpdateRequest request, AppDbContext db) => {
+        group.MapPut("update/{id:Guid}", async (Guid id, PetUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
 
-            var affectedRows = await db.Pets
+            string updatePetPhoto = request.Photo;
+
+            if (!string.IsNullOrWhiteSpace(request.Photo))
+            {
+                var upload = await cloudinary.UploadAsync(new ImageUploadParams {
+                    File = new FileDescription(request.Photo),
+                    Folder = "amigo-nao-se-compra/pets",
+                    PublicId = $"pet_{Guid.NewGuid()}"});
+
+                updatePetPhoto = upload.SecureUrl.ToString();
+            }
+
+            var affectedPet = await db.Pets
                 .Where(p => p.Id == id)
-                .ExecuteUpdateAsync(setters => setters
-                .SetProperty(p => p.Name, request.NewName)
-                .SetProperty(p => p.Photo, request.NewPhoto));
+                .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.Name, p => request.Name ?? p.Name)
+                .SetProperty(p => p.Photo, p => updatePetPhoto ?? p.Photo));
 
-            return affectedRows > 0 
-                ? Results.Ok(new { message = "PET_UPDATED" }) 
-                : Results.NotFound(new { code = "PET_NOT_FOUND" });
+            return affectedPet > 0 ? Results.Ok(new { 
+                id, 
+                name = request.Name, 
+                photo = updatePetPhoto}) : Results.NotFound(new { code = "PET_NOT_FOUND" });
+
         });
 
         group.MapDelete("delete/{id:Guid}", async (Guid id, AppDbContext db)=>
         {
-            var affectedRows = await db.Pets
+            var affectedPet = await db.Pets
                 .Where(p => p.Id == id)
                 .ExecuteDeleteAsync();
 
-            return affectedRows > 0 
-                ? Results.NoContent() 
-                : Results.NotFound(new { code = "PET_NOT_FOUND" });
+            return affectedPet > 0 ? Results.NoContent() : Results.NotFound(new { code = "PET_NOT_FOUND" });
 
         });
     }

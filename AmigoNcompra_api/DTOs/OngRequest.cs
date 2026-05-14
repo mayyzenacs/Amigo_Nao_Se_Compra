@@ -6,7 +6,7 @@ namespace AmigoNcompra_api.DTOS;
 public record OngRequest(
     [Required] [MaxLength(100)] string Name,
     [Required] [MaxLength(50)] string City,
-    string? Website,
+    [MaxLength(300)] string? Website,
     [Required] [MaxLength(100)] string Contact,
     [Required] ActivityType Activities,
     [Required] [MaxLength(250)] string About,
