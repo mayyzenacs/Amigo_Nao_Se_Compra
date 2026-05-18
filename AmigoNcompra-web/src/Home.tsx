@@ -2,10 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PawPrint, Info, MapPin, Search, Heart } from "lucide-react";
 import api from "./services/api";
+import type { Pet } from "./types/api";
 
 export function Home() {
   const [validCities, setValidCities] = useState<string[]>([]);
   const [city, setCity] = useState("");
+  const [pets, setPets] = useState<Pet[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,6 +15,10 @@ export function Home() {
       .get<string[]>("cities/list")
       .then((res) => setValidCities(res.data))
       .catch((err) => console.error("Erro ao carregar cidades:", err));
+    api
+      .get<Pet[]>("pets")
+      .then((res) => setPets(res.data.slice(0, 5)))
+      .catch((err) => console.error("Erro ao carregar pets:", err));
   }, []);
 
   const filteredSuggestions = useMemo(() => {
@@ -200,37 +206,40 @@ export function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { url: "/taina.jpg", nome: "Taina" },
-              { url: "/nina.jpeg", nome: "Nina" },
-              { url: "/zezinho.jpeg", nome: "Zezinho" },
-              {
-                url: "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?q=80&w=400",
-                nome: "Bob",
-              },
-            ].map((pet, index) => (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-xl aspect-3/4"
-              >
-                <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                  <h3 className="text-2xl font-black uppercase tracking-tighter leading-none">
-                    <span className="text-orange-500 ">
-                      {pet.nome.substring(0, 1)}
-                    </span>
-                    <span className="text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]">
-                      {pet.nome.substring(1)}
-                    </span>
-                  </h3>
+            {pets.length > 0 ? (
+              pets.map((pet) => (
+                <div
+                  key={pet.id}
+                  className="group relative overflow-hidden rounded-xl aspect-3/4"
+                >
+                  <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                    <h3 className="text-2xl font-black uppercase tracking-tighter leading-none">
+                      <span className="text-orange-500">
+                        {pet.name.substring(0, 1)}
+                      </span>
+                      <span className="text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]">
+                        {pet.name.substring(1)}
+                      </span>
+                    </h3>
+                  </div>
+                  <img
+                    src={pet.photo}
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=400";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-transparent opacity-60" />
                 </div>
-                <img
-                  src={pet.url}
-                  alt={pet.nome}
-                  className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-transparent opacity-60" />
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center border-2 border-dashed border-orange-200 rounded-2xl">
+                <p className="text-slate-400 font-black uppercase tracking-widest text-sm">
+                  Nenhum pet encontrado na API... 🐾
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </section>
       </main>

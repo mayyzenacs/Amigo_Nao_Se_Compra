@@ -5,7 +5,8 @@ using AmigoNcompra_api.Models;
 using AmigoNcompra_api.utils;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
-using Microsoft.AspNetCore.Identity;
+using System.Text.Json;
+using System.Text;
 
 namespace AmigoNcompra_api.Extensions;
 
@@ -13,15 +14,16 @@ public static class OngEndpoints
 {
     public static void MapOngEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/ongs");
+        var publicGroup = app.MapGroup("/ongs").RequireRateLimiting("fixed");
+        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("fixed");
 
-        group.MapGet("cities/list", async (AppDbContext db) => 
+        app.MapGet("cities/list", async (AppDbContext db) => 
             await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
 
-        group.MapGet("/", async (AppDbContext db) => 
+        publicGroup.MapGet("/", async (AppDbContext db) => 
             await db.Ongs.AsNoTracking().ToListAsync());
 
-        group.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
+        adminGroup.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
@@ -67,7 +69,7 @@ public static class OngEndpoints
             return Results.Created($"/ongs/{newOng.Id}", newOng);
         });
 
-        group.MapGet("search", async (string? city, AppDbContext db) =>
+        publicGroup.MapGet("search", async (string? city, AppDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
@@ -100,7 +102,7 @@ public static class OngEndpoints
             return Results.Ok(new SearchResponse(ongsFound));
         });
 
-        group.MapPut("update/{id:Guid}", async (Guid id, OngUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
+        adminGroup.MapPut("update/{id:Guid}", async (Guid id, OngUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
 
             string updateOngPhoto = request.Photo;
 
@@ -129,7 +131,7 @@ public static class OngEndpoints
              return affectedOng > 0 ? Results.Ok(new { id, data = request, photo = updateOngPhoto }) : Results.NotFound(new { code = "ONG_NOT_FOUND" });
         });
         
-        group.MapDelete("delete{id:Guid}", async (Guid id, AppDbContext db) =>
+        adminGroup.MapDelete("delete{id:Guid}", async (Guid id, AppDbContext db) =>
         {
             var affectedOng = await db.Ongs
                 .Where(o => o.Id == id)
@@ -137,6 +139,47 @@ public static class OngEndpoints
 
             return affectedOng > 0 ? Results.NoContent() : Results.NotFound(new { code = "ONG_NOT_FOUND" });
 
+        });
+
+        publicGroup.MapPost("register", async (OngRegisterRequest request, IHttpClientFactory httpClientFactory) =>
+        {
+            var envData = DotNetEnv.Env.Load();
+            var webhookUrl = Environment.GetEnvironmentVariable("WEB_HOOK_REGISTER");
+            Console.WriteLine($"{webhookUrl} LNK");
+            if (string.IsNullOrEmpty(webhookUrl)) return Results.Problem("WEBHOOK_NOT_FOUND");
+
+            var discordMessage = new
+            {
+                username = "Amigo Não Se Compra - Bot",
+                avatar_url = "",
+                embeds = new[]
+                {
+                    new
+                    {
+                        title = "🚨 NOVA SOLICITAÇÃO DE TRIAGEM ONG PARCEIRA",
+                        color = 15548997, 
+                        fields = new[]
+                        {
+                            new { name = "Instituição", value = request.Name, inline = true },
+                            new { name = "Cidade/UF", value = request.CityUf, inline = true },
+                            new { name = "Contato", value = request.ContactUrl, inline = false },
+                            new { name = "Site", value = request.WebsiteLink ?? "N/A", inline = false },
+                            new { name = "Atividades", value = request.Activities, inline = false }
+                        },
+                        timestamp = DateTime.UtcNow
+                    }
+                }
+            };
+            
+            var client = httpClientFactory.CreateClient();
+            var content = new StringContent(JsonSerializer.Serialize(discordMessage), Encoding.UTF8, "application/json");
+            
+            var response = await client.PostAsync(webhookUrl, content);
+
+            if (response.IsSuccessStatusCode)
+                return Results.Ok(new { message = "SUCCESS_REGISTER_SEND" });
+
+            return Results.Problem("ERR_MESSAGE_NOT_DELIVERED");
         });
     }
 }

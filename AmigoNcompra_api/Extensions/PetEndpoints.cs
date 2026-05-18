@@ -4,8 +4,6 @@ using AmigoNcompra_api.Models;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
-using Superpower.Model;
 
 namespace AmigoNcompra_api.Extensions;
 
@@ -13,12 +11,13 @@ public static class PetEndpoints
 {
     public static void MapPetEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/pets");
+        var publicGroup = app.MapGroup("/pets").RequireRateLimiting("fixed");
+        var adminGroup = app.MapGroup("/pets").RequireRateLimiting("fixed").RequireAuthorization("AdminOnly");
 
-        group.MapGet("/", async (AppDbContext db) => 
+        publicGroup.MapGet("/", async (AppDbContext db) => 
             await db.Pets.AsNoTracking().ToListAsync());
 
-        group.MapPost("add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
+        adminGroup.MapPost("add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("PET_NAME_REQUIRED");
 
@@ -56,7 +55,7 @@ public static class PetEndpoints
             }
         }); 
 
-        group.MapGet("showcase", async (AppDbContext db) =>
+        publicGroup.MapGet("showcase", async (AppDbContext db) =>
         {
             var randomShowcase = await db.Pets
                 .AsNoTracking()
@@ -67,7 +66,7 @@ public static class PetEndpoints
             return Results.Ok(randomShowcase);
         });
 
-        group.MapPut("update/{id:Guid}", async (Guid id, PetUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
+        adminGroup.MapPut("update/{id:Guid}", async (Guid id, PetUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
 
             string updatePetPhoto = request.Photo;
 
@@ -94,7 +93,7 @@ public static class PetEndpoints
 
         });
 
-        group.MapDelete("delete/{id:Guid}", async (Guid id, AppDbContext db)=>
+        adminGroup.MapDelete("delete/{id:Guid}", async (Guid id, AppDbContext db)=>
         {
             var affectedPet = await db.Pets
                 .Where(p => p.Id == id)
