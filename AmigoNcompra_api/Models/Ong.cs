@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using AmigoNcompra_api.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AmigoNcompra_api.Models;

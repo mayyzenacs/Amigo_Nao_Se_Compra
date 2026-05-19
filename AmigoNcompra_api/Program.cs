@@ -35,6 +35,14 @@ builder.Services.AddCors(options => {
               .AllowAnyHeader());
 });
 
+builder.Services.RateLimitingConfig();
+
+builder.Services.AddSingleton<TokenService>();
+builder.Services.AddJwtAuthentication();
+builder.Services.AddDbContext<AppDbContext>();
+
+builder.Services.AddHttpClient();
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -59,8 +67,15 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("AllowReact");
 
-app.MapOngEndpoints();
-app.MapPetEndpoints();
+app.UseRateLimiter();
+app.UseAuthentication(); 
+app.UseAuthorization();
+
+var apiGroup = app.MapGroup("/api");
+
+apiGroup.MapAuthEndpoints();
+apiGroup.MapOngEndpoints();
+apiGroup.MapPetEndpoints();
 
 app.MapGet("/health", () => Results.Ok());
 

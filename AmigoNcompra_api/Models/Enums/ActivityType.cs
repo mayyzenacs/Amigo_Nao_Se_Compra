@@ -1,9 +1,8 @@
-namespace AmigoNcompra_api.Models;
+namespace AmigoNcompra_api.Models.Enums;
 
 [Flags]
 public enum ActivityType
 {
-    None = 0,
     Adocao = 1,        
     RecebeDoacao = 2,    
     Resgate = 4,

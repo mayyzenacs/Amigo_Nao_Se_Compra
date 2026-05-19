@@ -18,5 +18,13 @@ export interface Pet {
 export interface SearchResponse {
   data: Ong[];
   suggestions?: Ong[];
-  message?: string;
+  code: string;
+}
+
+export interface OngRegister {
+  name: string;
+  cityuf: string;
+  contacturl: string;
+  websitelink: string;
+  activities: string;
 }
