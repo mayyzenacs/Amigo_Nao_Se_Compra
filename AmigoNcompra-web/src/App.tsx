@@ -3,6 +3,7 @@ import { Home } from "./Home";
 import { Footer } from "./Footer";
 import Ongs from "./Ongs";
 import Ongform from "./Ongform";
+import Mission from "./Mission";
 
 export default function App() {
   return (
@@ -12,7 +13,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/ongs" element={<Ongs />} />
-            <Route path="/ongform" element={<Ongform />} />
+            <Route path="/cadastro" element={<Ongform />} />
+            <Route path="/manifesto" element={<Mission />} />
           </Routes>
         </main>
 

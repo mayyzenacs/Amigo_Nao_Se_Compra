@@ -51,7 +51,7 @@ public static class OngEndpoints
             return Results.Ok(new SearchResponse(ongsFound));
         });
 
-        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("fixed");
+        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("strict");
 
         adminGroup.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
@@ -174,7 +174,7 @@ public static class OngEndpoints
                 return Results.Ok(new { message = "SUCCESS_REGISTER_SEND" });
 
             return Results.Problem("ERR_MESSAGE_NOT_DELIVERED");
-        });
+        }).RequireRateLimiting("custom");
 
         app.MapGet("cities/list", async (AppDbContext db) => await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
     }

@@ -12,10 +12,21 @@ public static class PetEndpoints
     public static void MapPetEndpoints(this IEndpointRouteBuilder app)
     {
         var publicGroup = app.MapGroup("/pets").RequireRateLimiting("fixed");
-        var adminGroup = app.MapGroup("/pets").RequireRateLimiting("fixed").RequireAuthorization("AdminOnly");
 
         publicGroup.MapGet("/", async (AppDbContext db) => 
             await db.Pets.AsNoTracking().ToListAsync());
+        
+        publicGroup.MapGet("showcase", async (AppDbContext db) =>
+        {
+            var randomShowcase = await db.Pets
+                .AsNoTracking()
+                .OrderBy(p => EF.Functions.Random())
+                .Take(5)
+                .ToListAsync();
+            return Results.Ok(randomShowcase);
+        });
+
+        var adminGroup = app.MapGroup("/pets").RequireRateLimiting("strict").RequireAuthorization("AdminOnly");
 
         adminGroup.MapPost("add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
@@ -54,17 +65,6 @@ public static class PetEndpoints
                 return Results.Conflict(new { code = "INTERNAL_ERROR" });
             }
         }); 
-
-        publicGroup.MapGet("showcase", async (AppDbContext db) =>
-        {
-            var randomShowcase = await db.Pets
-                .AsNoTracking()
-                .OrderBy(p => EF.Functions.Random())
-                .Take(5)
-                .ToListAsync();
-
-            return Results.Ok(randomShowcase);
-        });
 
         adminGroup.MapPut("update/{id:Guid}", async (Guid id, PetUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
 

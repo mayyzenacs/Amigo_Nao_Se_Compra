@@ -25,10 +25,18 @@ export const Footer = () => {
               </li>
               <li>
                 <a
-                  href="/ongform"
+                  href="/manifesto"
                   className="hover:text-orange-500 transition-colors"
                 >
-                  Como cadastrar
+                  Nosso Objetivo
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/cadastro"
+                  className="hover:text-orange-500 transition-colors"
+                >
+                  Como Cadastrar
                 </a>
               </li>
             </ul>
@@ -39,10 +47,20 @@ export const Footer = () => {
               Informações
             </h4>
             <div className="flex flex-col mb-6">
+              <ul className="space-y-4 font-bold text-slate-600 mb-3">
+                <li>
+                  <a
+                    href="/cadastro"
+                    className="hover:text-orange-500 transition-colors"
+                  >
+                    Como Cadastrar
+                  </a>
+                </li>
+              </ul>
               <p> por Mayra Pereira</p>
               <a
                 href="#"
-                className="font-black text-slate-400 hover:text-orange-500 transition-all text-sm uppercase tracking-tighter"
+                className="font-black text-slate-400 hover:text-orange-500 transition-all text-sm uppercase"
               >
                 GitHub
               </a>
