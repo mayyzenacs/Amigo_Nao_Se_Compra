@@ -132,7 +132,7 @@ export function Home() {
               <input
                 type="text"
                 list="cities-list"
-                placeholder="Qual sua cidade? (Ex: Osasco)"
+                placeholder="Qual sua cidade? (Ex: São Paulo)"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}

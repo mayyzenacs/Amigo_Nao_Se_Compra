@@ -20,3 +20,11 @@ export interface SearchResponse {
   suggestions?: Ong[];
   code: string;
 }
+
+export interface OngRegister {
+  name: string;
+  cityuf: string;
+  contacturl: string;
+  websitelink: string;
+  activities: string;
+}

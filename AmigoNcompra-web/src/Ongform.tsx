@@ -40,11 +40,14 @@ export default function Ongform() {
           </h2>
           <p className="text-slate-500 font-bold mb-8 leading-relaxed">
             Coletamos as informações da sua ONG. Nossa equipe fará a triagem e
-            entraremos em contato para publicar o perfil.
+            entraremos em contato para publicar o perfil.{" "}
           </p>
+          <span className="text-orange-600 font-black italic">
+            Estamos lisonjeados do interesse em fazer parte dessa campanha.{" "}
+          </span>
           <button
             onClick={() => navigate("/")}
-            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+            className="w-full bg-slate-900 text-white font-black mt-5 py-4 rounded-2xl uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
           >
             Voltar ao Início
           </button>
@@ -71,10 +74,10 @@ export default function Ongform() {
             </h2>
             <p className="text-lg text-slate-500 font-medium max-w-2xl leading-relaxed">
               Ajude-nos a mapear instituições. Preencha os dados abaixo para
-              nossa
+              nossa triagem
               <span className="text-orange-600 font-black italic">
                 {" "}
-                triagem manual
+                e faça parte dessa campanha.
               </span>
               .
             </p>
@@ -98,7 +101,7 @@ export default function Ongform() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">
+                <label className="font-black uppercase text-sm tracking-widest text-slate-400 ml-2">
                   Cidade - UF
                 </label>
                 <input
@@ -115,8 +118,8 @@ export default function Ongform() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">
-                Link de Contato(whatsapp) ou Rede Social
+              <label className="font-black uppercase text-sm tracking-widest text-slate-400 ml-2">
+                Link de Contato ou Rede Social
               </label>
               <input
                 required
@@ -126,12 +129,12 @@ export default function Ongform() {
                   setFormData({ ...formData, contact: e.target.value })
                 }
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 focus:outline-none focus:border-orange-400 transition-all font-bold placeholder:text-slate-300"
-                placeholder="Ex: instagram.com/suaong OU wa.me/5511"
+                placeholder="Ex: instagram ou link whatsapp"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">
+              <label className="font-black uppercase text-sm tracking-widest text-slate-400 ml-2">
                 Link do site
               </label>
               <input
@@ -147,7 +150,7 @@ export default function Ongform() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">
+              <label className="font-black uppercase text-sm tracking-widest text-slate-400 ml-2">
                 O que vocês fazem?
               </label>
               <textarea
@@ -157,7 +160,7 @@ export default function Ongform() {
                   setFormData({ ...formData, activities: e.target.value })
                 }
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 focus:outline-none focus:border-orange-400 transition-all font-bold min-h-35 resize-none placeholder:text-slate-300"
-                placeholder="Descreva se realizam adoção, recebem doações, quais atividades e breve resumo..."
+                placeholder="Descreva se realizam adoção, recebem doações e breve resumo..."
               ></textarea>
             </div>
 

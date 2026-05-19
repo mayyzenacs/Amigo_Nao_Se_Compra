@@ -15,13 +15,43 @@ public static class OngEndpoints
     public static void MapOngEndpoints(this IEndpointRouteBuilder app)
     {
         var publicGroup = app.MapGroup("/ongs").RequireRateLimiting("fixed");
-        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("fixed");
-
-        app.MapGet("cities/list", async (AppDbContext db) => 
-            await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
 
         publicGroup.MapGet("/", async (AppDbContext db) => 
             await db.Ongs.AsNoTracking().ToListAsync());
+
+        publicGroup.MapGet("search", async (string? city, AppDbContext db) =>
+        {
+            if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("CITY_NAME_REQUIRED");
+
+            var normalizeCity = city.SearchToken();
+
+            var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
+            if (!cityExists) return Results.BadRequest(new { code = "CITY_INVALID" });
+
+            var ongsFound = await db.Ongs
+                .AsTracking()
+                .Where(o => o.NormalizedCity == normalizeCity)
+                .ToListAsync();
+
+            if (ongsFound.Count == 0)
+            {
+                var suggestions = await db.Ongs
+                    .AsNoTracking()
+                    .OrderBy(r => EF.Functions.Random())
+                    .Take(3)
+                    .ToListAsync();
+
+                return Results.Ok(new SearchResponse(
+                    ongsFound,
+                    suggestions,
+                    "ONG_NOT_FOUND"
+                ));
+            }
+
+            return Results.Ok(new SearchResponse(ongsFound));
+        });
+
+        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("fixed");
 
         adminGroup.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
@@ -69,39 +99,6 @@ public static class OngEndpoints
             return Results.Created($"/ongs/{newOng.Id}", newOng);
         });
 
-        publicGroup.MapGet("search", async (string? city, AppDbContext db) =>
-        {
-            if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("CITY_NAME_REQUIRED");
-
-            var normalizeCity = city.SearchToken();
-
-            var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
-            if (!cityExists) return Results.BadRequest(new { code = "CITY_INVALID" });
-          
-
-            var ongsFound = await db.Ongs
-                .AsTracking()
-                .Where(o => o.NormalizedCity == normalizeCity)
-                .ToListAsync();
-
-            if (ongsFound.Count == 0)
-            {
-                var suggestions = await db.Ongs
-                    .AsNoTracking()
-                    .OrderBy(r => EF.Functions.Random())
-                    .Take(3)
-                    .ToListAsync();
-
-                return Results.Ok(new SearchResponse(
-                    ongsFound,
-                    suggestions,
-                    "ONG_NOT_FOUND"
-                ));
-            }
-
-            return Results.Ok(new SearchResponse(ongsFound));
-        });
-
         adminGroup.MapPut("update/{id:Guid}", async (Guid id, OngUpdateRequest request, AppDbContext db, Cloudinary cloudinary) => {
 
             string updateOngPhoto = request.Photo;
@@ -141,20 +138,18 @@ public static class OngEndpoints
 
         });
 
-        publicGroup.MapPost("register", async (OngRegisterRequest request, IHttpClientFactory httpClientFactory) =>
+        app.MapPost("ongs/register", async (OngRegisterRequest request, IHttpClientFactory httpClientFactory) =>
         {
             var envData = DotNetEnv.Env.Load();
             var webhookUrl = Environment.GetEnvironmentVariable("WEB_HOOK_REGISTER");
-            Console.WriteLine($"{webhookUrl} LNK");
             if (string.IsNullOrEmpty(webhookUrl)) return Results.Problem("WEBHOOK_NOT_FOUND");
 
             var discordMessage = new
             {
-                username = "Amigo Não Se Compra - Bot",
+                username = "Amigo Não Se Compra - BotBob",
                 avatar_url = "",
                 embeds = new[]
-                {
-                    new
+                {new
                     {
                         title = "🚨 NOVA SOLICITAÇÃO DE TRIAGEM ONG PARCEIRA",
                         color = 15548997, 
@@ -165,8 +160,7 @@ public static class OngEndpoints
                             new { name = "Contato", value = request.ContactUrl, inline = false },
                             new { name = "Site", value = request.WebsiteLink ?? "N/A", inline = false },
                             new { name = "Atividades", value = request.Activities, inline = false }
-                        },
-                        timestamp = DateTime.UtcNow
+                        },timestamp = DateTime.UtcNow
                     }
                 }
             };
@@ -181,5 +175,7 @@ public static class OngEndpoints
 
             return Results.Problem("ERR_MESSAGE_NOT_DELIVERED");
         });
+
+        app.MapGet("cities/list", async (AppDbContext db) => await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
     }
 }

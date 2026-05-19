@@ -48,5 +48,12 @@ public static class Extensions
 
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
+        services.AddRateLimiter(options => 
+            options.AddFixedWindowLimiter("custom", opt =>
+            {
+                opt.PermitLimit = 2;
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.QueueLimit = 0;
+            }));
     }
 }
