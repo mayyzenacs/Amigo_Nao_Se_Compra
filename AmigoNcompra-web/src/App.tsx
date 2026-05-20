@@ -4,6 +4,7 @@ import { Footer } from "./Footer";
 import Ongs from "./Ongs";
 import Ongform from "./Ongform";
 import Mission from "./Mission";
+import Privacy from "./Privacy";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
             <Route path="/ongs" element={<Ongs />} />
             <Route path="/cadastro" element={<Ongform />} />
             <Route path="/manifesto" element={<Mission />} />
+            <Route path="/privacidade" element={<Privacy />} />
           </Routes>
         </main>
 

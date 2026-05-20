@@ -9,6 +9,6 @@ public record OngRequest(
     [MaxLength(300)] string? Website,
     [Required] [MaxLength(100)] string Contact,
     [Required] ActivityType Activities,
-    [Required] [MaxLength(250)] string About,
+    [Required] [MaxLength(300)] string About,
     [Required] [MaxLength(500)] string Photo
 );

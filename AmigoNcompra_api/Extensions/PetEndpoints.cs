@@ -20,8 +20,8 @@ public static class PetEndpoints
         {
             var randomShowcase = await db.Pets
                 .AsNoTracking()
-                .OrderBy(p => EF.Functions.Random())
-                .Take(5)
+                .OrderBy(o => EF.Functions.Random()) 
+                .Take(10)
                 .ToListAsync();
             return Results.Ok(randomShowcase);
         });

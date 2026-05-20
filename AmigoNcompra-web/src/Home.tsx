@@ -16,8 +16,8 @@ export function Home() {
       .then((res) => setValidCities(res.data))
       .catch((err) => console.error("Erro ao carregar cidades:", err));
     api
-      .get<Pet[]>("pets")
-      .then((res) => setPets(res.data.slice(0, 5)))
+      .get<Pet[]>("pets/showcase")
+      .then((res) => setPets(res.data.slice(0, 10)))
       .catch((err) => console.error("Erro ao carregar pets:", err));
   }, []);
 
@@ -27,7 +27,7 @@ export function Home() {
 
     return validCities
       .filter((c) => c.toLowerCase().includes(searchTerm))
-      .slice(0, 10);
+      .slice(0, 5);
   }, [city, validCities]);
 
   const isCityValid = validCities.some(
@@ -51,23 +51,22 @@ export function Home() {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="flex-1">
               <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-6 leading-none underline decoration-orange-500 decoration-6 underline-offset-6">
-                Amigo <span className="text-orange-500">Não </span>{" "}
+                Amigo <span className="text-orange-500">Não </span>
                 <span> se Compra</span>.
               </h2>
 
               <div className="space-y-6 text-xl font-medium text-orange-50/90 leading-relaxed">
                 <p>
-                  Estima-se que mais de{" "}
+                  Estima-se que mais de
                   <span className="text-white font-black">
                     30 milhões de animais
-                  </span>{" "}
+                  </span>
                   vivem em situação de abandono no Brasil. Todos os anos,
                   milhares são descartados como objetos.
                 </p>
                 <p>
-                  Ao adotar, você quebra o ciclo de um{" "}
-                  <span className="text-white">sistema escravizatório</span> de
-                  reprodução forçada.
+                  Ao adotar, você quebra o ciclo de um sistema escravizatório de
+                  reprodução forçada. Seja a diferença, adote!
                 </p>
               </div>
             </div>
@@ -94,6 +93,22 @@ export function Home() {
                   </span>
                   <span className="flex-1">
                     Garante que o amor não tenha preço
+                  </span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="bg-orange-200 text-orange-700 rounded-full p-1 leading-none text-xs">
+                    ✓
+                  </span>
+                  <span className="flex-1">
+                    Luta contra um sistema que não favorece os animais
+                  </span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="bg-orange-200 text-orange-700 rounded-full p-1 leading-none text-xs">
+                    ✓
+                  </span>
+                  <span className="flex-1">
+                    Dá um lar pra um animal que precisa de uma familia
                   </span>
                 </li>
               </ul>
@@ -171,7 +186,10 @@ export function Home() {
               tit: "Apoie Local",
               desc: "Fortaleça a rede de proteção da sua cidade.",
             },
-            { tit: "Adoção", desc: "Encontre um amigo para a vida toda." },
+            {
+              tit: "Adoção",
+              desc: "Encontre um amigo para a vida toda que precisa de um lar.",
+            },
             {
               tit: "Divulgação",
               desc: "Compartilhe para que mais vidas sejam salvas.",
@@ -179,10 +197,10 @@ export function Home() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-3xl p-10 border border-orange-100 shadow-sm hover:shadow-xl transition-all group"
+              className="bg-white rounded-3xl p-8 border border-orange-100 shadow-sm hover:shadow-xl transition-all group"
             >
-              <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                <Heart size={32} fill="currentColor" />
+              <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <Heart size={26} fill="currentColor" />
               </div>
               <h3 className="text-2xl font-black text-slate-900 uppercase mb-4 tracking-tight">
                 {item.tit}
@@ -226,8 +244,7 @@ export function Home() {
                     src={pet.photo}
                     className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=400";
+                      (e.target as HTMLImageElement).src = "";
                     }}
                   />
                   <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-transparent opacity-60" />

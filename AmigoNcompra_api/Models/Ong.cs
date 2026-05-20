@@ -25,7 +25,7 @@ public class Ong
     [Required]
     public required ActivityType Activities { get; set; }
 
-    [Required] [MaxLength(250)]
+    [Required] [MaxLength(300)]
     public required string About { get; set; } = string.Empty;
 
     [Required]
