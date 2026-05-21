@@ -1,26 +1,68 @@
 services:
   amigo-api:
-    image: ghcr.io/mayyzenacs/ansc-api:latest
-    container_name: amigoncompra_api
-    restart: always
+    image: ghcr.io/mayyzenacs/amigo-api:latest
+    container_name: amigo_api
+    restart: unless-stopped
+
+    networks:
+      - amigo-network
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+
+    read_only: true
+
+    tmpfs:
+      - /tmp:mode=1777,size=50M
+      - /var/run:mode=1777,size=1M
+      - /var/cache:mode=1777,size=20M
+      - /var/log:mode=1777,size=5M
+
+    deploy:
+      resources:
+        limits:
+          memory: 220M
+        reservations:
+          memory: 120M
+
     environment:
-      - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Data Source=/app/data/${DB_NAME}
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DOTNET_GCHeapHardLimit=180000000
+      - DOTNET_GCHighMemPercent=80
+      - TZ=America/Sao_Paulo
     ports:
-      - "${API_PORT}:8080"
+      -
+
     volumes:
-      - ./database:/app/data
+      - ./data:/app/data:rw
+
     healthcheck:
       test:
         [
           "CMD",
           "wget",
-          "--no-verbose",
+          "--quiet",
           "--tries=1",
           "--spider",
-          "http://localhost:8080/health",
+          "http://localhost:80/showcase",
         ]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 30s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  amigos-network:
+    external: true
