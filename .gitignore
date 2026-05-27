@@ -22,6 +22,10 @@ out/
 dist
 dist-ssr
 *.local
+*.db
+*.db-wal
+*.db-shm
+data/
 
 ## React/TypeScript cache
 .cache/
