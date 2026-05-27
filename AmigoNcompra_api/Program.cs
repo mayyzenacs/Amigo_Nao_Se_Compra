@@ -11,7 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                       ?? "Data Source=amigonaosecompra.db";
+                       ?? (builder.Environment.IsProduction() 
+                            ? "Data Source=/app/data/amigonaosecompra.db" 
+                            : "Data Source=amigonaosecompra.db");
 
 var cloudName = Environment.GetEnvironmentVariable("CLOUD_NAME");
 var apiKey = Environment.GetEnvironmentVariable("API_KEY");
@@ -30,7 +32,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowReact", policy => 
-        policy.WithOrigins("https://amigonaosecompra.mayradev.me")
+        policy.WithOrigins("https://amigonaosecompra.mayradev.me", 
+                "http://localhost:8080",               
+                "http://localhost:5173")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials());
@@ -47,6 +51,8 @@ builder.Services.AddHttpClient();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseCors("AllowReact");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -65,8 +71,6 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Error while applying migrations.");
     }
 }
-
-app.UseCors("AllowReact");
 
 app.UseRateLimiter();
 app.UseAuthentication(); 

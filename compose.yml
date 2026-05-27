@@ -1,6 +1,9 @@
 services:
   amigo-api:
-    image: ghcr.io/mayyzenacs/amigo-api:latest
+    build:
+      context: AmigoNcompra_api
+      dockerfile: dockerfile
+    # image: ghcr.io/mayyzenacs/amigo-api:latest
     container_name: amigo_api
     restart: unless-stopped
 
@@ -9,13 +12,11 @@ services:
 
     security_opt:
       - no-new-privileges:true
-
     cap_drop:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
       - CHOWN
-
     read_only: true
 
     tmpfs:
@@ -33,6 +34,7 @@ services:
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/amigonaosecompra.db
       - DOTNET_GCHeapHardLimit=180000000
       - DOTNET_GCHighMemPercent=80
       - TZ=America/Sao_Paulo
@@ -60,31 +62,39 @@ services:
         max-size: "10m"
         max-file: "3"
 
-amigo-web:
-  image: ghcr.io/mayyzenacs/amigo-web:latest
-  container_name: amigo_web
-  restart: unless-stopped
-  networks:
-    - main-network
-  security_opt:
-    - no-new-privileges:true
-  cap_drop:
-    - ALL
-  cap_add:
-    - NET_BIND_SERVICE
-  read_only: true
-  tmpfs:
-    - /tmp:mode=1777,size=10M
-    - /var/run:mode=1777,size=1M
-    - /var/cache:mode=1777,size=10M
-    - /var/log:mode=1777,size=5M
-  deploy:
-    resources:
-      limits:
-        memory: 30M
-      reservations:
-        memory: 15M
+  amigo-web:
+    build:
+      context: AmigoNcompra-web
+      dockerfile: dockerfile
+    #image: ghcr.io/mayyzenacs/amigo-web:latest
+    container_name: amigo_web
+    restart: unless-stopped
+
+    networks:
+      - main-network
+
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=10M
+      - /var/run:mode=1777,size=1M
+      - /var/cache:mode=1777,size=10M
+      - /var/log:mode=1777,size=5M
+    ports:
+      - "8080:80"
+
+    deploy:
+      resources:
+        limits:
+          memory: 30M
+        reservations:
+          memory: 15M
 
 networks:
   main-network:
-    external: true
+    driver: bridge
