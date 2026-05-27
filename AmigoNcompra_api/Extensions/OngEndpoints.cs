@@ -31,6 +31,7 @@ public static class OngEndpoints
             var ongsFound = await db.Ongs
                 .AsTracking()
                 .Where(o => o.NormalizedCity == normalizeCity)
+                .OrderBy(o => EF.Functions.Random())
                 .ToListAsync();
 
             if (ongsFound.Count == 0)
@@ -38,7 +39,7 @@ public static class OngEndpoints
                 var suggestions = await db.Ongs
                     .AsNoTracking()
                     .OrderBy(r => EF.Functions.Random())
-                    .Take(3)
+                    .Take(4)
                     .ToListAsync();
 
                 return Results.Ok(new SearchResponse(
@@ -51,27 +52,25 @@ public static class OngEndpoints
             return Results.Ok(new SearchResponse(ongsFound));
         });
 
-        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("fixed");
+        var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("strict");
 
         adminGroup.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name)) return Results.BadRequest("CITY_NAME_REQUIRED");
 
-            // string finalOngPhoto = request.Photo;
+            string finalOngPhoto = request.Photo;
 
-            // if (!string.IsNullOrWhiteSpace(request.Photo))
-            // {
-            //     var result = await cloudinary.UploadAsync(new ImageUploadParams 
-            //     {
-            //         File = new FileDescription(request.Photo),
-            //         Folder = "amigo-nao-se-compra/ongs",
-            //         PublicId = $"ong_{Guid.NewGuid()}"
-            //     });
+            if (!string.IsNullOrWhiteSpace(request.Photo))
+            {
+                var result = await cloudinary.UploadAsync(new ImageUploadParams 
+                {
+                    File = new FileDescription(request.Photo),
+                    Folder = "amigo-nao-se-compra/ongs",
+                    PublicId = $"ong_{Guid.NewGuid()}"
+                });
 
-            //     if (result.Error == null) finalOngPhoto = result.SecureUrl.ToString();
-            // } 
-
-            // --->>> RETIRAR ANTES DA PRODUçÃO e ALTERAR REQUEST.PHOTO PARA FINALONGPHOTO. <<<-----
+                if (result.Error == null) finalOngPhoto = result.SecureUrl.ToString();
+            }
 
             var newOng = new Ong
             {
@@ -83,7 +82,7 @@ public static class OngEndpoints
                 Contact = request.Contact,
                 Activities = request.Activities,
                 About = request.About,
-                Photo = request.Photo
+                Photo = finalOngPhoto
             };
 
             try
@@ -128,7 +127,7 @@ public static class OngEndpoints
              return affectedOng > 0 ? Results.Ok(new { id, data = request, photo = updateOngPhoto }) : Results.NotFound(new { code = "ONG_NOT_FOUND" });
         });
         
-        adminGroup.MapDelete("delete{id:Guid}", async (Guid id, AppDbContext db) =>
+        adminGroup.MapDelete("delete/{id:Guid}", async (Guid id, AppDbContext db) =>
         {
             var affectedOng = await db.Ongs
                 .Where(o => o.Id == id)
@@ -174,7 +173,7 @@ public static class OngEndpoints
                 return Results.Ok(new { message = "SUCCESS_REGISTER_SEND" });
 
             return Results.Problem("ERR_MESSAGE_NOT_DELIVERED");
-        });
+        }).RequireRateLimiting("custom");
 
         app.MapGet("cities/list", async (AppDbContext db) => await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
     }

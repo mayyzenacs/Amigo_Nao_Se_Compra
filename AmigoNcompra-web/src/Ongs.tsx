@@ -14,8 +14,7 @@ import type { Ong, SearchResponse } from "./types/api";
 const UI_MESSAGES: Record<string, string> = {
   CITY_NAME_REQUIRED: "O campo cidade é obrigatório.",
   CITY_INVALID: "Essa cidade não foi encontrada no registro.",
-  ERR_ONG_NOT_FOUND:
-    "Infelizmente ainda não temos ONGs cadastradas na sua cidade.",
+  ONG_NOT_FOUND: "Infelizmente ainda não temos ONGs cadastradas na sua cidade.",
 };
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -67,7 +66,6 @@ export default function Ongs() {
         return "bg-green-50 text-green-600 border-green-100";
       if (n.includes("recebedoacao"))
         return "bg-blue-50 text-blue-400 border-blue-100";
-      return "bg-slate-50 text-slate-500 border-slate-100";
     };
 
     return activities.split(",").map((atv) => {
@@ -77,7 +75,7 @@ export default function Ongs() {
       return (
         <span
           key={rawValue}
-          className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${getStyle(rawValue)}`}
+          className={`text-[11px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${getStyle(rawValue)}`}
         >
           {label}
         </span>
@@ -95,11 +93,11 @@ export default function Ongs() {
           <img
             src={ong.photo}
             alt={ong.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+            className="w-full h-full object-cover group-hover:scale-115 transition-transform"
           />
         </div>
         <div className="flex flex-col gap-2">
-          <h3 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight leading-none">
+          <h3 className="text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tight leading-none">
             {ong.name}
           </h3>
           <div className="flex flex-wrap gap-2 mt-1">
@@ -107,13 +105,11 @@ export default function Ongs() {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 text-slate-500 font-bold uppercase text-xs mb-2">
+      <div className="flex items-center gap-2 text-slate-500 font-bold uppercase text-xs">
         <MapPin size={14} className="text-orange-500" />
         <h2>{ong.city}</h2>
       </div>
-      <p className="text-slate-500 font-medium leading-relaxed line-clamp-3">
-        {ong.about}
-      </p>
+      <p className="text-slate-500 font-medium leading-relaxed">{ong.about}</p>
       <div className="grid grid-cols-2 gap-4 mt-auto">
         <a
           href={ong.website || "#"}
@@ -164,7 +160,7 @@ export default function Ongs() {
 
             {result?.data.length === 0 && (
               <div className="space-y-12">
-                <div className="bg-white p-16 rounded-[3rem] border-4 border-dashed border-orange-100 text-center">
+                <div className="bg-white p-10 rounded-[3rem] border-4 border-dashed border-orange-100 text-center">
                   <p className="text-xl font-black text-slate-400 uppercase italic mb-2">
                     {UI_MESSAGES[result.code]}
                   </p>
@@ -181,23 +177,34 @@ export default function Ongs() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           {[
-            { tit: "Apoie Local", desc: "Fortaleça a rede." },
-            { tit: "Adoção", desc: "Amigo pra vida." },
-            { tit: "Divulgação", desc: "Compartilhe." },
+            {
+              tit: "Apoie Local",
+              desc: "Fortaleça a rede de proteção da sua cidade.",
+            },
+            {
+              tit: "Adoção",
+              desc: "Encontre um amigo para a vida toda que precisa de um lar.",
+            },
+            {
+              tit: "Divulgação",
+              desc: "Compartilhe para que mais vidas sejam salvas.",
+            },
           ].map((item, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-3xl p-10 border border-orange-100 shadow-sm"
+              className="bg-white rounded-3xl p-8 border border-orange-100 shadow-sm hover:shadow-xl transition-all group"
             >
-              <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
-                <Heart size={32} fill="currentColor" />
+              <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <Heart size={26} fill="currentColor" />
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase mb-3">
+              <h3 className="text-2xl font-black text-slate-900 uppercase mb-4 tracking-tight">
                 {item.tit}
               </h3>
-              <p className="font-medium text-slate-500 text-sm">{item.desc}</p>
+              <p className="font-medium text-slate-500 leading-relaxed">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>

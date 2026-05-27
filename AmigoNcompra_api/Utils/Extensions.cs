@@ -1,6 +1,6 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AmigoNcompra_api.utils;
@@ -30,30 +30,48 @@ public static class Extensions
             };
         });
 
-        services.AddAuthorization(options => {
-            options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-        });
+        services.AddAuthorizationBuilder()
+            .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     }
 
     public static void RateLimitingConfig(this IServiceCollection services)
     {
         services.AddRateLimiter(options =>
         {
-            options.AddFixedWindowLimiter("fixed", opt =>
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
-                opt.PermitLimit = 8; 
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueLimit = 0; 
+                return RateLimitPartition.GetSlidingWindowLimiter("global-limit", _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 300,
+                    Window = TimeSpan.FromSeconds(10),
+                    SegmentsPerWindow = 2,
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                });
             });
+
+            options.AddPolicy("fixed", httpContext => RateLimitPartition.GetTokenBucketLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = 20,         
+                    TokensPerPeriod = 5,     
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(15),
+                    QueueLimit = 0,
+                }));
+
+            options.AddPolicy("strict", httpContext => RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 3, 
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 3, 
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
 
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
-        services.AddRateLimiter(options => 
-            options.AddFixedWindowLimiter("custom", opt =>
-            {
-                opt.PermitLimit = 2;
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.QueueLimit = 0;
-            }));
     }
 }

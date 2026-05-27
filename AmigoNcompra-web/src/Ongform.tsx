@@ -1,31 +1,45 @@
 import { useState } from "react";
-import { ArrowLeft, Send, CheckCircle } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "./services/api";
+
+export interface OngRegister {
+  name: string;
+  cityuf: string;
+  contacturl: string;
+  websitelink: string;
+  activities: string;
+}
 
 export default function Ongform() {
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const [formData, setFormData] = useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<OngRegister>({
     name: "",
-    city: "",
-    contact: "",
+    cityuf: "",
+    contacturl: "",
+    websitelink: "",
     activities: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    const submissionPayload = {
-      ...formData,
-      requestDate: new Date().toISOString(),
-      source: "web_form_mvp",
-      status: "PENDING_CURATION",
-    };
+    try {
+      await api.post("ongs/register", formData);
 
-    console.log("JSON captured for manual curation:", submissionPayload);
-
-    setIsSubmitted(true);
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error("Erro ao enviar triagem:", error);
+      alert(
+        error.response?.data?.title ||
+          "Erro ao conectar com o servidor. Tente novamente mais tarde.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -43,7 +57,7 @@ export default function Ongform() {
             entraremos em contato para publicar o perfil.{" "}
           </p>
           <span className="text-orange-600 font-black italic">
-            Estamos lisonjeados do interesse em fazer parte dessa campanha.{" "}
+            Agradecemos o lindo interesse em fazer parte dessa campanha.{" "}
           </span>
           <button
             onClick={() => navigate("/")}
@@ -107,9 +121,9 @@ export default function Ongform() {
                 <input
                   required
                   type="text"
-                  value={formData.city}
+                  value={formData.cityuf}
                   onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
+                    setFormData({ ...formData, cityuf: e.target.value })
                   }
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 focus:outline-none focus:border-orange-400 transition-all font-bold placeholder:text-slate-300"
                   placeholder="Ex: Jundiai - SP"
@@ -124,9 +138,9 @@ export default function Ongform() {
               <input
                 required
                 type="text"
-                value={formData.contact}
+                value={formData.contacturl}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact: e.target.value })
+                  setFormData({ ...formData, contacturl: e.target.value })
                 }
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 focus:outline-none focus:border-orange-400 transition-all font-bold placeholder:text-slate-300"
                 placeholder="Ex: instagram ou link whatsapp"
@@ -138,11 +152,10 @@ export default function Ongform() {
                 Link do site
               </label>
               <input
-                required
                 type="text"
-                value={formData.contact}
+                value={formData.websitelink}
                 onChange={(e) =>
-                  setFormData({ ...formData, contact: e.target.value })
+                  setFormData({ ...formData, websitelink: e.target.value })
                 }
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 focus:outline-none focus:border-orange-400 transition-all font-bold placeholder:text-slate-300"
                 placeholder="Caso não tenha deixe em branco"
@@ -166,9 +179,18 @@ export default function Ongform() {
 
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-6 rounded-2xl transition-all shadow-xl shadow-orange-500/30 uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95"
+              disabled={isLoading}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-black py-6 rounded-2xl transition-all shadow-xl shadow-orange-500/30 uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95"
             >
-              Enviar para Triagem <Send size={20} />
+              {isLoading ? (
+                <>
+                  Enviando... <Loader2 className="animate-spin" size={20} />
+                </>
+              ) : (
+                <>
+                  Enviar para Triagem <Send size={20} />
+                </>
+              )}
             </button>
           </form>
         </div>
