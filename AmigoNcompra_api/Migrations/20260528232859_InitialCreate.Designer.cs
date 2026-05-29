@@ -11,14 +11,35 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AmigoNcompra_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260507210421_AddNormalizedColumn")]
-    partial class AddNormalizedColumn
+    [Migration("20260528232859_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
+
+            modelBuilder.Entity("AmigoNcompra_api.Models.CityReference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName");
+
+                    b.ToTable("Cities");
+                });
 
             modelBuilder.Entity("AmigoNcompra_api.Models.Ong", b =>
                 {
@@ -28,7 +49,7 @@ namespace AmigoNcompra_api.Migrations
 
                     b.Property<string>("About")
                         .IsRequired()
-                        .HasMaxLength(250)
+                        .HasMaxLength(300)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Activities")
@@ -36,7 +57,7 @@ namespace AmigoNcompra_api.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Contact")
@@ -51,6 +72,7 @@ namespace AmigoNcompra_api.Migrations
 
                     b.Property<string>("NormalizedCity")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Photo")
@@ -71,6 +93,8 @@ namespace AmigoNcompra_api.Migrations
 
                     b.HasIndex("Name")
                         .IsUnique();
+
+                    b.HasIndex("NormalizedCity");
 
                     b.HasIndex("Website")
                         .IsUnique();
@@ -95,6 +119,9 @@ namespace AmigoNcompra_api.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Photo")
+                        .IsUnique();
 
                     b.ToTable("Pets");
                 });

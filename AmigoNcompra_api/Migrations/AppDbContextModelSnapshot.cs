@@ -46,7 +46,7 @@ namespace AmigoNcompra_api.Migrations
 
                     b.Property<string>("About")
                         .IsRequired()
-                        .HasMaxLength(250)
+                        .HasMaxLength(300)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Activities")

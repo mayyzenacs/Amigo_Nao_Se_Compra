@@ -1,100 +1,30 @@
 services:
   amigo-api:
     build:
-      context: AmigoNcompra_api
-      dockerfile: dockerfile
-    # image: ghcr.io/mayyzenacs/amigo-api:latest
-    container_name: amigo_api
-    restart: unless-stopped
-
-    networks:
-      - main-network
-
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-      - CHOWN
-    read_only: true
-
-    tmpfs:
-      - /tmp:mode=1777,size=50M
-      - /var/run:mode=1777,size=1M
-      - /var/cache:mode=1777,size=20M
-      - /var/log:mode=1777,size=5M
-
-    deploy:
-      resources:
-        limits:
-          memory: 220M
-        reservations:
-          memory: 120M
-
+      context: ./AmigoNcompra_api
+    container_name: amigo-api
+    user: "root"
+    restart: always
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Data Source=/app/data/amigonaosecompra.db
-      - DOTNET_GCHeapHardLimit=180000000
-      - DOTNET_GCHighMemPercent=80
-      - TZ=America/Sao_Paulo
+
     volumes:
-      - ./data:/app/data:rw
-
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:80/showcase",
-        ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      - ./data:/app/data
+    ports:
+      - "5000:8080"
 
   amigo-web:
     build:
-      context: AmigoNcompra-web
-      dockerfile: dockerfile
-    #image: ghcr.io/mayyzenacs/amigo-web:latest
-    container_name: amigo_web
-    restart: unless-stopped
-
-    networks:
-      - main-network
-
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-    read_only: true
-    tmpfs:
-      - /tmp:mode=1777,size=10M
-      - /var/run:mode=1777,size=1M
-      - /var/cache:mode=1777,size=10M
-      - /var/log:mode=1777,size=5M
+      context: ./AmigoNcompra-web
+    container_name: amigo-web
+    user: "root"
+    restart: always
     ports:
       - "8080:80"
-
-    deploy:
-      resources:
-        limits:
-          memory: 30M
-        reservations:
-          memory: 15M
+    volumes:
+      - ./AmigoNcompra-web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - amigo-api
 
 networks:
-  main-network:
-    driver: bridge
+  default:
+    name: amigo-network

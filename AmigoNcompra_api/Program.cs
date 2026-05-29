@@ -13,7 +13,7 @@ DotNetEnv.Env.Load();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                        ?? (builder.Environment.IsProduction() 
                             ? "Data Source=/app/data/amigonaosecompra.db" 
-                            : "Data Source=amigonaosecompra.db");
+                            : "Data Source=data/amigonaosecompra.db"); 
 
 var cloudName = Environment.GetEnvironmentVariable("CLOUD_NAME");
 var apiKey = Environment.GetEnvironmentVariable("API_KEY");
