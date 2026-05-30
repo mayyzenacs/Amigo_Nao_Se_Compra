@@ -3,9 +3,9 @@ services:
     build:
       context: ./AmigoNcompra_api
     container_name: amigo-api
-    user: "root"
     restart: always
-    environment:
+    env_file:
+      - ./AmigoNcompra_api/.env
 
     volumes:
       - ./data:/app/data
@@ -16,7 +16,6 @@ services:
     build:
       context: ./AmigoNcompra-web
     container_name: amigo-web
-    user: "root"
     restart: always
     ports:
       - "8080:80"

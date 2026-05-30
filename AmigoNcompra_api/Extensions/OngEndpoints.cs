@@ -25,6 +25,8 @@ public static class OngEndpoints
 
             var normalizeCity = city.SearchToken();
 
+            Console.WriteLine(normalizeCity);
+
             var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
             if (!cityExists) return Results.BadRequest(new { code = "CITY_INVALID" });
 
