@@ -8,8 +8,9 @@ import {
   Heart,
   MapPin,
 } from "lucide-react";
-import api from "./services/api";
-import type { Ong, SearchResponse } from "./types/api";
+
+import type { Ong, SearchResponse } from "../types/api";
+import api from "../services/api";
 
 const UI_MESSAGES: Record<string, string> = {
   CITY_NAME_REQUIRED: "O campo cidade é obrigatório.",

@@ -16,16 +16,13 @@ public static class OngEndpoints
     {
         var publicGroup = app.MapGroup("/ongs").RequireRateLimiting("fixed");
 
-        publicGroup.MapGet("/", async (AppDbContext db) => 
-            await db.Ongs.AsNoTracking().ToListAsync());
+        publicGroup.MapGet("/", GetOngPages);
 
         publicGroup.MapGet("search", async (string? city, AppDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(city)) return Results.BadRequest("CITY_NAME_REQUIRED");
-
+    
             var normalizeCity = city.SearchToken();
-
-            Console.WriteLine(normalizeCity);
 
             var cityExists = await db.Cities.AnyAsync(c => c.NormalizedName == normalizeCity);
             if (!cityExists) return Results.BadRequest(new { code = "CITY_INVALID" });
@@ -175,8 +172,43 @@ public static class OngEndpoints
                 return Results.Ok(new { message = "SUCCESS_REGISTER_SEND" });
 
             return Results.Problem("ERR_MESSAGE_NOT_DELIVERED");
-        }).RequireRateLimiting("custom");
+        }).RequireRateLimiting("strict");
 
         app.MapGet("cities/list", async (AppDbContext db) => await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
+    
+        }
+    private static async Task<IResult> GetOngPages(
+        int page = 1, 
+        int pageSize = 20, 
+        AppDbContext db = null!)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 50) pageSize = 20; 
+
+        var query = db.Ongs.AsNoTracking();
+
+        var totalItems = await query.CountAsync();
+        var totalPages = (totalItems + pageSize - 1) / pageSize;
+
+        var ongs = await query
+            .OrderBy(o => o.Name)
+            .ThenBy(o => o.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Results.Ok(new
+        {
+            data = ongs,
+            pagination = new
+            {
+                currentPage = page,
+                pageSize = pageSize,
+                totalItems = totalItems,
+                totalPages = totalPages,
+                hasNextPage = page < totalPages,
+                hasPreviousPage = page > 1
+            }
+        });
     }
 }

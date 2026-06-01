@@ -47,6 +47,8 @@ obj/
 *.sln
 .sln
 *.sln
+Migrations/
+
 
 ## IDE/editor
 .vscode/

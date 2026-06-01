@@ -13,7 +13,7 @@ export default function Mission() {
     {
       icon: <ShieldCheck className="text-orange-500" size={32} />,
       title: "Curadoria Técnica",
-      desc: "Não somos apenas um mural. Cada ONG passa por uma triagem rigorosa antes de aparecer aqui.",
+      desc: "Não somos apenas um mural. Cada ONG passa por uma triagem antes de aparecer aqui.",
     },
     {
       icon: <Target className="text-orange-500" size={32} />,
