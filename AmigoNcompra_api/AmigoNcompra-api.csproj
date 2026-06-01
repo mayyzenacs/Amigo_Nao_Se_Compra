@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>AmigoNcompra_api</RootNamespace>
     <!-- <PublishAot>true</PublishAot> -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <RetainVMGarbageCollection>false</RetainVMGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

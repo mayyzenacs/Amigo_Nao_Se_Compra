@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, Send, CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import api from "./services/api";
+import api from "../services/api";
 
 export interface OngRegister {
   name: string;

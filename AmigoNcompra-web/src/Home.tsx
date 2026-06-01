@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PawPrint, Info, MapPin, Search, Heart } from "lucide-react";
-import api from "./services/api";
 import type { Pet } from "./types/api";
+import api from "./services/api";
 
 export function Home() {
   const [validCities, setValidCities] = useState<string[]>([]);
   const [city, setCity] = useState("");
+  const [suggestion, setSuggestion] = useState("");
   const [pets, setPets] = useState<Pet[]>([]);
   const navigate = useNavigate();
 
@@ -21,18 +22,38 @@ export function Home() {
       .catch((err) => console.error("Erro ao carregar pets:", err));
   }, []);
 
-  const filteredSuggestions = useMemo(() => {
-    const searchTerm = city.trim().toLowerCase();
-    if (searchTerm.length < 3) return [];
-
-    return validCities
-      .filter((c) => c.toLowerCase().includes(searchTerm))
-      .slice(0, 5);
-  }, [city, validCities]);
-
   const isCityValid = validCities.some(
     (c) => c.toLowerCase() === city.trim().toLowerCase(),
   );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCity(value);
+
+    if (value.length > 0) {
+      const match = validCities.find((c) =>
+        c.toLowerCase().startsWith(value.toLowerCase()),
+      );
+
+      if (match) {
+        setSuggestion(match);
+      } else {
+        setSuggestion("");
+      }
+    } else {
+      setSuggestion("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSearch();
+
+    if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion) {
+      e.preventDefault();
+      setCity(suggestion);
+      setSuggestion("");
+    }
+  };
 
   const handleSearch = () => {
     const trimmedCity = city.trim();
@@ -57,9 +78,9 @@ export function Home() {
 
               <div className="space-y-6 text-xl font-medium text-orange-50/90 leading-relaxed">
                 <p>
-                  Estima-se que mais de
+                  Estima-se que mais de <span> </span>
                   <span className="text-white font-black">
-                    30 milhões de animais
+                    30 milhões de animais <span> </span>
                   </span>
                   vivem em situação de abandono no Brasil. Todos os anos,
                   milhares são descartados como objetos.
@@ -137,31 +158,40 @@ export function Home() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative group">
               <MapPin
-                className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${
+                className={`absolute left-6 top-1/2 -translate-y-1/2 z-30 transition-colors ${
                   !isCityValid && city
                     ? "text-red-400"
                     : "text-slate-400 group-focus-within:text-orange-500"
                 }`}
                 size={24}
               />
+              <div className="absolute left-16 top-1/2 -translate-y-1/2 text-lg font-semibold pointer-events-none z-10 whitespace-pre tracking-normal">
+                {suggestion && (
+                  <>
+                    <span className="text-transparent">
+                      {suggestion.substring(0, city.length)}
+                    </span>
+                    <span className="text-slate-300">
+                      {suggestion.substring(city.length)}
+                    </span>
+                  </>
+                )}
+              </div>
               <input
                 type="text"
-                list="cities-list"
-                placeholder="Qual sua cidade? (Ex: São Paulo)"
+                placeholder={
+                  suggestion ? "" : "Qual sua cidade? (Ex: São Paulo)"
+                }
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className={`w-full bg-slate-50 border-2 rounded-2xl p-6 pl-16 text-lg font-semibold focus:outline-none transition-all shadow-inner ${
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                className={`w-full border-2 rounded-2xl p-6 pl-16 text-lg font-semibold focus:outline-none transition-all shadow-inner relative z-20 bg-transparent ${
                   !isCityValid && city
-                    ? "border-red-200 focus:border-red-400"
-                    : "border-slate-100 focus:border-orange-400 focus:bg-white"
+                    ? "border-red-200 focus:border-red-400 bg-slate-50/50"
+                    : "border-slate-100 focus:border-orange-400 focus:bg-white bg-slate-50"
                 }`}
+                autoComplete="off"
               />
-              <datalist id="cities-list">
-                {filteredSuggestions.map((c, index) => (
-                  <option key={index} value={c} />
-                ))}
-              </datalist>
             </div>
 
             <button
@@ -218,8 +248,8 @@ export function Home() {
               Alerta de fofura
             </h2>
             <br />
-            <span className="text-2xl md:text-xl text-slate-400 font-medium lowercase">
-              veja animais adotados felizes e desperte o bem no coração
+            <span className="text-2xl md:text-xl text-slate-400 font-medium">
+              Veja animais adotados felizes e desperte o bem no coração
             </span>
           </div>
 

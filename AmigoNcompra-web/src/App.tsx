@@ -1,10 +1,13 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Home } from "./Home";
+import Mission from "./pages/Mission";
+import Privacy from "./pages/Privacy";
+import { AdmLogin } from "./pages/AdmLogin";
+import { ProtectedRoute } from "./Protected";
+import { AdminDashboard } from "./pages/AdmDashboard";
+import Ongs from "./pages/Ongs";
+import Ongform from "./pages/Ongform";
+import { Home } from "lucide-react";
 import { Footer } from "./Footer";
-import Ongs from "./Ongs";
-import Ongform from "./Ongform";
-import Mission from "./Mission";
-import Privacy from "./Privacy";
 
 export default function App() {
   return (
@@ -17,6 +20,17 @@ export default function App() {
             <Route path="/cadastro" element={<Ongform />} />
             <Route path="/manifesto" element={<Mission />} />
             <Route path="/privacidade" element={<Privacy />} />
+
+            <Route path="/mcp-login" element={<AdmLogin />} />
+
+            <Route
+              path="/admin/painel"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
 
