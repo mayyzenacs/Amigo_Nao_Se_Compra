@@ -7,206 +7,58 @@ import {
   Plus,
   Activity,
   ShieldAlert,
-  Send,
   X,
   Link as LinkIcon,
-  Check,
   Dog,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import api from "../services/api";
-import {
-  ACTIVITY_FLAGS,
-  type DashboardView,
-  type NewOng,
-  type Pet,
-} from "../types/api";
+import { useOngManagement } from "../hooks/useOngManagement";
+import { usePetManagement } from "../hooks/usePetManagement";
+import { ACTIVITY_FLAGS, type DashboardView } from "../types/admin";
 
 export function AdminDashboard() {
-  const [activeView, setActiveView] = useState<DashboardView>("list-ongs");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [view, setView] = useState<DashboardView>("list-ongs");
   const navigate = useNavigate();
-
-  const [ongs, setOngs] = useState<NewOng[]>([]);
-  const [editingOngId, setEditingOngId] = useState<string | null>(null);
-  const [ongPage, setOngPage] = useState(1);
-  const [ongTotalPages, setOngTotalPages] = useState(1);
-  const [ongFormData, setOngFormData] = useState({
-    name: "",
-    city: "",
-    website: "",
-    contact: "",
-    activities: 0,
-    about: "",
-    photo: "",
-  });
-
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [editingPetId, setEditingPetId] = useState<string | null>(null);
-  const [petFormData, setPetFormData] = useState({
-    name: "",
-    photo: "",
-  });
+  const ongMgmt = useOngManagement();
+  const petMgmt = usePetManagement();
 
   useEffect(() => {
-    if (activeView === "list-ongs") fetchOngs(ongPage);
-    if (activeView === "list-pets") fetchPets();
-  }, [activeView, ongPage]);
-
-  const fetchOngs = async (pageToFetch: number) => {
-    try {
-      setIsLoading(true);
-      const response = await api.get(`/ongs?page=${pageToFetch}&pageSize=10`);
-      setOngs(response.data.data);
-      setOngPage(response.data.pagination.currentPage);
-      setOngTotalPages(response.data.pagination.totalPages);
-    } catch (error) {
-      console.error("Erro ao buscar ONGs:", error);
-      handleLogout();
-    } finally {
-      setIsLoading(false);
+    if (view === "list-ongs") {
+      ongMgmt.fetch(ongMgmt.page).catch(() => handleLogout());
+    } else if (view === "list-pets") {
+      petMgmt.fetch();
     }
-  };
-
-  const handleDeleteOng = async (id: string) => {
-    if (!window.confirm("Remover esta ONG permanentemente?")) return;
-    try {
-      await api.delete(`/ongs/delete/${id}`);
-      setOngs(ongs.filter((ong) => ong.id !== id));
-      alert("ONG removida.");
-    } catch (error) {
-      console.error("Erro ao deletar ONG:", error);
-    }
-  };
-
-  const handleEditOngClick = (ong: NewOng) => {
-    setOngFormData({
-      name: ong.name,
-      city: ong.city,
-      website: ong.website || "",
-      contact: ong.contact,
-      activities: ong.activities || 0,
-      about: ong.about || "",
-      photo: ong.photo || "",
-    });
-    setEditingOngId(ong.id);
-    setActiveView("form-ongs");
-  };
-
-  const handleAddNewOngClick = () => {
-    setOngFormData({
-      name: "",
-      city: "",
-      website: "",
-      contact: "",
-      activities: 0,
-      about: "",
-      photo: "",
-    });
-    setEditingOngId(null);
-    setActiveView("form-ongs");
-  };
-
-  const toggleActivity = (flagValue: number) => {
-    setOngFormData((prev) => ({
-      ...prev,
-      activities: prev.activities ^ flagValue,
-    }));
-  };
-
-  const isActivityActive = (flagValue: number) => {
-    return (ongFormData.activities & flagValue) === flagValue;
-  };
-
-  const handleSubmitOng = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        name: ongFormData.name,
-        city: ongFormData.city,
-        website: ongFormData.website || null,
-        contact: ongFormData.contact,
-        activities: ongFormData.activities > 0 ? ongFormData.activities : null,
-        about: ongFormData.about || null,
-        photo: ongFormData.photo || null,
-      };
-
-      if (editingOngId) await api.put(`/ongs/update/${editingOngId}`, payload);
-      else await api.post("/ongs/add", payload);
-
-      alert("ONG salva!");
-      setActiveView("list-ongs");
-    } catch (error) {
-      console.error("Erro:", error);
-      alert("Falha ao salvar a ONG.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const fetchPets = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get<Pet[]>("/pets");
-      setPets(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar Pets:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeletePet = async (id: string) => {
-    if (!window.confirm("Remover este pet permanentemente?")) return;
-    try {
-      await api.delete(`/pets/delete/${id}`);
-      setPets(pets.filter((pet) => pet.id !== id));
-      alert("Pet removido.");
-    } catch (error) {
-      console.error("Erro ao deletar Pet:", error);
-    }
-  };
-
-  const handleEditPetClick = (pet: Pet) => {
-    setPetFormData({ name: pet.name, photo: pet.photo || "" });
-    setEditingPetId(pet.id);
-    setActiveView("form-pets");
-  };
-
-  const handleAddNewPetClick = () => {
-    setPetFormData({ name: "", photo: "" });
-    setEditingPetId(null);
-    setActiveView("form-pets");
-  };
-
-  const handleSubmitPet = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        name: petFormData.name,
-        photo: petFormData.photo || null,
-      };
-      if (editingPetId) await api.put(`/pets/update/${editingPetId}`, payload);
-      else await api.post("/pets/add", payload);
-
-      alert("Pet salvo!");
-      setActiveView("list-pets");
-    } catch (error) {
-      console.error("Erro:", error);
-      alert("Falha ao salvar o Pet.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  }, [view]);
 
   const handleLogout = () => {
     localStorage.removeItem("@AmigoNCompra:token");
     navigate("/");
   };
+
+  const navButton = (
+    viewName: DashboardView,
+    icon: React.ReactNode,
+    label: string,
+    isNew?: boolean,
+  ) => (
+    <button
+      onClick={() => {
+        if (isNew) {
+          if (viewName === "form-ongs") ongMgmt.startNew();
+          else petMgmt.startNew();
+        }
+        setView(viewName);
+      }}
+      className={`flex items-center gap-3 w-full p-3 rounded-xl font-bold transition-all ${
+        view === viewName
+          ? "bg-white/10 text-orange-400"
+          : "text-slate-400 hover:bg-white/5"
+      }`}
+    >
+      {icon} {label}
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex">
@@ -223,52 +75,16 @@ export function AdminDashboard() {
             <h3 className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-2 mb-3">
               Instituições
             </h3>
-            <button
-              onClick={() => setActiveView("list-ongs")}
-              className={`flex items-center gap-3 w-full p-3 rounded-xl font-bold transition-all ${
-                activeView === "list-ongs"
-                  ? "bg-white/10 text-orange-400"
-                  : "text-slate-400 hover:bg-white/5"
-              }`}
-            >
-              <Activity size={18} /> Gerenciar ONGs
-            </button>
-            <button
-              onClick={handleAddNewOngClick}
-              className={`flex items-center gap-3 w-full p-3 rounded-xl font-bold transition-all ${
-                activeView === "form-ongs" && !editingOngId
-                  ? "bg-white/10 text-orange-400"
-                  : "text-slate-400 hover:bg-white/5"
-              }`}
-            >
-              <Plus size={18} /> Adicionar ONG
-            </button>
+            {navButton("list-ongs", <Activity size={18} />, "Gerenciar ONGs")}
+            {navButton("form-ongs", <Plus size={18} />, "Adicionar ONG", true)}
           </div>
 
           <div className="space-y-2">
             <h3 className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-2 mb-3">
               Animais
             </h3>
-            <button
-              onClick={() => setActiveView("list-pets")}
-              className={`flex items-center gap-3 w-full p-3 rounded-xl font-bold transition-all ${
-                activeView === "list-pets"
-                  ? "bg-white/10 text-orange-400"
-                  : "text-slate-400 hover:bg-white/5"
-              }`}
-            >
-              <Dog size={18} /> Gerenciar Pets
-            </button>
-            <button
-              onClick={handleAddNewPetClick}
-              className={`flex items-center gap-3 w-full p-3 rounded-xl font-bold transition-all ${
-                activeView === "form-pets" && !editingPetId
-                  ? "bg-white/10 text-orange-400"
-                  : "text-slate-400 hover:bg-white/5"
-              }`}
-            >
-              <Plus size={18} /> Adicionar Pet
-            </button>
+            {navButton("list-pets", <Dog size={18} />, "Gerenciar Pets")}
+            {navButton("form-pets", <Plus size={18} />, "Adicionar Pet", true)}
           </div>
         </nav>
 
@@ -281,21 +97,17 @@ export function AdminDashboard() {
       </aside>
 
       <main className="flex-1 p-10 overflow-y-auto">
-        {activeView === "list-ongs" && (
+        {view === "list-ongs" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <header className="flex justify-between items-center mb-10">
-              <div>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                  Controle de ONGs
-                </h1>
-                <p className="text-slate-500 font-medium">
-                  Gerencie as instituições cadastradas na plataforma.
-                </p>
-              </div>
-            </header>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+              Controle de ONGs
+            </h1>
+            <p className="text-slate-500 font-medium mb-10">
+              Gerencie as instituições cadastradas na plataforma.
+            </p>
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-              {isLoading ? (
+              {ongMgmt.isLoading ? (
                 <div className="p-10 text-center text-slate-400 font-bold animate-pulse">
                   Carregando dados...
                 </div>
@@ -311,7 +123,7 @@ export function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ongs.map((ong) => (
+                      {ongMgmt.ongs.map((ong) => (
                         <tr
                           key={ong.id}
                           className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
@@ -325,13 +137,16 @@ export function AdminDashboard() {
                           <td className="p-5 text-slate-600">{ong.contact}</td>
                           <td className="p-5 flex justify-end gap-3">
                             <button
-                              onClick={() => handleEditOngClick(ong)}
+                              onClick={() => {
+                                ongMgmt.startEdit(ong);
+                                setView("form-ongs");
+                              }}
                               className="p-2 text-slate-400 hover:text-blue-500 rounded-lg"
                             >
                               <Edit size={18} />
                             </button>
                             <button
-                              onClick={() => handleDeleteOng(ong.id)}
+                              onClick={() => ongMgmt.delete(ong.id)}
                               className="p-2 text-slate-400 hover:text-red-500 rounded-lg"
                             >
                               <Trash2 size={18} />
@@ -344,25 +159,25 @@ export function AdminDashboard() {
 
                   <div className="flex items-center justify-between p-5 bg-slate-50/50 border-t border-slate-100">
                     <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">
-                      Página {ongPage} de {ongTotalPages}
+                      Página {ongMgmt.page} de {ongMgmt.totalPages}
                     </span>
                     <div className="flex gap-2">
                       <button
                         onClick={() =>
-                          setOngPage((prev) => Math.max(1, prev - 1))
+                          ongMgmt.setPage(Math.max(1, ongMgmt.page - 1))
                         }
-                        disabled={ongPage === 1}
+                        disabled={ongMgmt.page === 1}
                         className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-all"
                       >
                         <ChevronLeft size={20} />
                       </button>
                       <button
                         onClick={() =>
-                          setOngPage((prev) =>
-                            Math.min(ongTotalPages, prev + 1),
+                          ongMgmt.setPage(
+                            Math.min(ongMgmt.totalPages, ongMgmt.page + 1),
                           )
                         }
-                        disabled={ongPage >= ongTotalPages}
+                        disabled={ongMgmt.page >= ongMgmt.totalPages}
                         className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-all"
                       >
                         <ChevronRight size={20} />
@@ -375,158 +190,148 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {activeView === "form-ongs" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+        {view === "form-ongs" && (
+          <div className="max-w-4xl mx-auto">
             <header className="flex justify-between items-center mb-10">
-              <div>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                  {editingOngId ? "Editar Instituição" : "Nova ONG"}
-                </h1>
-              </div>
-              <button
-                onClick={() => setActiveView("list-ongs")}
-                className="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold flex items-center gap-2"
-              >
-                <X size={20} /> Cancelar
-              </button>
+              <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+                {ongMgmt.editingId ? "Editar Instituição" : "Nova ONG"}
+              </h1>
             </header>
             <form
-              onSubmit={handleSubmitOng}
-              className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                ongMgmt.submit().then(() => setView("list-ongs"));
+              }}
+              className="bg-white rounded-3xl shadow-sm p-8 space-y-6"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400">
-                    Nome *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={ongFormData.name}
-                    onChange={(e) =>
-                      setOngFormData({ ...ongFormData, name: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border-2 rounded-2xl p-4"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400">
-                    Cidade *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={ongFormData.city}
-                    onChange={(e) =>
-                      setOngFormData({ ...ongFormData, city: e.target.value })
-                    }
-                    className="w-full bg-slate-50 border-2 rounded-2xl p-4"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400">
-                    Contato *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={ongFormData.contact}
-                    onChange={(e) =>
-                      setOngFormData({
-                        ...ongFormData,
-                        contact: e.target.value,
-                      })
-                    }
-                    className="w-full bg-slate-50 border-2 rounded-2xl p-4"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    value={ongFormData.website}
-                    onChange={(e) =>
-                      setOngFormData({
-                        ...ongFormData,
-                        website: e.target.value,
-                      })
-                    }
-                    className="w-full bg-slate-50 border-2 rounded-2xl p-4"
-                  />
-                </div>
+                {[
+                  {
+                    key: "name",
+                    label: "Nome *",
+                    type: "text",
+                    required: true,
+                  },
+                  {
+                    key: "city",
+                    label: "Cidade *",
+                    type: "text",
+                    required: true,
+                  },
+                  {
+                    key: "contact",
+                    label: "Contato *",
+                    type: "text",
+                    required: true,
+                  },
+                  {
+                    key: "website",
+                    label: "Website",
+                    type: "url",
+                    required: false,
+                  },
+                ].map(({ key, label, type, required }) => (
+                  <div key={key} className="space-y-2">
+                    <label className="text-xs font-black text-slate-400">
+                      {label}
+                    </label>
+                    <input
+                      type={type}
+                      required={required}
+                      value={
+                        ongMgmt.formData[key as keyof typeof ongMgmt.formData]
+                      }
+                      onChange={(e) =>
+                        ongMgmt.setFormData({
+                          ...ongMgmt.formData,
+                          [key]: e.target.value,
+                        })
+                      }
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 focus:border-orange-400 focus:outline-none transition-colors"
+                    />
+                  </div>
+                ))}
               </div>
+
               <div className="space-y-3">
                 <label className="text-xs font-black text-slate-400">
-                  Atividades (Bitmask)
+                  Atividades
                 </label>
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                   {ACTIVITY_FLAGS.map((f) => (
                     <button
                       key={f.value}
                       type="button"
-                      onClick={() => toggleActivity(f.value)}
-                      className={`flex gap-2 px-4 py-2 rounded-xl border-2 font-bold ${isActivityActive(f.value) ? "bg-orange-50 border-orange-500 text-orange-600" : "border-slate-200 text-slate-400"}`}
+                      onClick={() => ongMgmt.toggleActivity(f.value)}
+                      className={`flex gap-2 px-4 py-2 rounded-xl border-2 border-slate-300 font-bold transition-all ${
+                        (ongMgmt.formData.activities & f.value) === f.value
+                          ? "bg-orange-200 border-orange-500 text-orange-600"
+                          : "border-slate-200 text-slate-400"
+                      }`}
                     >
-                      {isActivityActive(f.value) && <Check size={16} />}
+                      {(ongMgmt.formData.activities & f.value) === f.value}
                       {f.label}
                     </button>
                   ))}
                 </div>
               </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400">
                   Sobre
                 </label>
                 <textarea
                   rows={3}
-                  value={ongFormData.about}
+                  value={ongMgmt.formData.about}
                   onChange={(e) =>
-                    setOngFormData({ ...ongFormData, about: e.target.value })
+                    ongMgmt.setFormData({
+                      ...ongMgmt.formData,
+                      about: e.target.value,
+                    })
                   }
-                  className="w-full bg-slate-50 border-2 rounded-2xl p-4"
+                  className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 focus:border-orange-400 focus:outline-none transition-colors resize-none"
                 />
               </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400">
                   URL Foto (Imgur)
                 </label>
                 <input
                   type="url"
-                  value={ongFormData.photo}
+                  value={ongMgmt.formData.photo}
                   onChange={(e) =>
-                    setOngFormData({ ...ongFormData, photo: e.target.value })
+                    ongMgmt.setFormData({
+                      ...ongMgmt.formData,
+                      photo: e.target.value,
+                    })
                   }
-                  className="w-full bg-slate-50 border-2 rounded-2xl p-4"
+                  className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 focus:border-orange-400 focus:outline-none transition-colors"
                 />
               </div>
+
               <div className="pt-4 flex justify-end">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="bg-black text-white px-8 py-4 rounded-xl font-black flex gap-3"
+                  disabled={ongMgmt.isSubmitting}
+                  className="bg-black text-white px-4 py-4 rounded-xl font-black flex gap-3 hover:bg-slate-800 disabled:opacity-50 transition-all"
                 >
-                  {isSubmitting ? "Salvando..." : "Salvar"}
-                  <Send size={18} />
+                  {ongMgmt.isSubmitting ? "Salvando..." : "Salvar"}
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        {activeView === "list-pets" && (
+        {view === "list-pets" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <header className="flex justify-between items-center mb-10">
-              <div>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                  Controle de Pets
-                </h1>
-              </div>
-            </header>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-10">
+              Controle de Pets
+            </h1>
+
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-              {isLoading ? (
-                <div className="p-10 text-center font-bold">
+              {petMgmt.isLoading ? (
+                <div className="p-10 text-center font-bold text-slate-400">
                   Carregando dados...
                 </div>
               ) : (
@@ -539,8 +344,11 @@ export function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pets.map((pet) => (
-                      <tr key={pet.id} className="border-b">
+                    {petMgmt.pets.map((pet) => (
+                      <tr
+                        key={pet.id}
+                        className="border-b border-slate-200 hover:bg-slate-50 transition-colors"
+                      >
                         <td className="p-3 pl-5">
                           {pet.photo ? (
                             <img
@@ -557,14 +365,17 @@ export function AdminDashboard() {
                         <td className="p-5 font-bold">{pet.name}</td>
                         <td className="p-5 flex justify-end gap-3">
                           <button
-                            onClick={() => handleEditPetClick(pet)}
-                            className="p-2 hover:text-blue-500"
+                            onClick={() => {
+                              petMgmt.startEdit(pet);
+                              setView("form-pets");
+                            }}
+                            className="p-2 text-slate-400 hover:text-blue-500 rounded-lg transition-colors"
                           >
                             <Edit size={18} />
                           </button>
                           <button
-                            onClick={() => handleDeletePet(pet.id)}
-                            className="p-2 hover:text-red-500"
+                            onClick={() => petMgmt.delete(pet.id)}
+                            className="p-2 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -578,21 +389,24 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {activeView === "form-pets" && (
+        {view === "form-pets" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
             <header className="flex justify-between items-center mb-10">
               <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-                {editingPetId ? "Editar Pet" : "Novo Pet"}
+                {petMgmt.editingId ? "Editar Pet" : "Novo Pet"}
               </h1>
               <button
-                onClick={() => setActiveView("list-pets")}
+                onClick={() => setView("list-pets")}
                 className="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold flex items-center gap-2"
               >
                 <X size={20} /> Cancelar
               </button>
             </header>
             <form
-              onSubmit={handleSubmitPet}
+              onSubmit={(e) => {
+                e.preventDefault();
+                petMgmt.submit().then(() => setView("list-pets"));
+              }}
               className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 space-y-6"
             >
               <div className="space-y-2">
@@ -602,13 +416,17 @@ export function AdminDashboard() {
                 <input
                   type="text"
                   required
-                  value={petFormData.name}
+                  value={petMgmt.formData.name}
                   onChange={(e) =>
-                    setPetFormData({ ...petFormData, name: e.target.value })
+                    petMgmt.setFormData({
+                      ...petMgmt.formData,
+                      name: e.target.value,
+                    })
                   }
-                  className="w-full bg-slate-50 border-2 rounded-2xl p-4"
+                  className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 focus:border-orange-400 focus:outline-none transition-colors"
                 />
               </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400">
                   URL da Foto (Imgur)
@@ -620,30 +438,33 @@ export function AdminDashboard() {
                   />
                   <input
                     type="url"
-                    value={petFormData.photo}
+                    value={petMgmt.formData.photo}
                     onChange={(e) =>
-                      setPetFormData({ ...petFormData, photo: e.target.value })
+                      petMgmt.setFormData({
+                        ...petMgmt.formData,
+                        photo: e.target.value,
+                      })
                     }
-                    className="w-full bg-slate-50 border-2 rounded-2xl p-4 pl-14"
+                    className="w-full bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 pl-14 focus:border-orange-400 focus:outline-none transition-colors"
                   />
                 </div>
-                {petFormData.photo && (
+                {petMgmt.formData.photo && (
                   <img
-                    src={petFormData.photo}
+                    src={petMgmt.formData.photo}
                     alt="Preview"
                     className="mt-4 h-32 rounded-xl object-cover"
                     onError={(e) => (e.currentTarget.style.display = "none")}
                   />
                 )}
               </div>
+
               <div className="pt-4 flex justify-end">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="bg-black text-white px-8 py-4 rounded-xl font-black flex gap-3"
+                  disabled={petMgmt.isSubmitting}
+                  className="bg-black text-white px-4 py-4 rounded-xl font-black flex gap-3 hover:bg-slate-800 disabled:opacity-50 transition-all"
                 >
-                  {isSubmitting ? "Salvando..." : "Salvar"}
-                  <Send size={18} />
+                  {petMgmt.isSubmitting ? "Salvando..." : "Salvar"}
                 </button>
               </div>
             </form>
