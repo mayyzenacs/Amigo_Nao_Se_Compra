@@ -1,13 +1,13 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Ongs from "./pages/Ongs";
+import Ongform from "./pages/Ongform";
 import Mission from "./pages/Mission";
 import Privacy from "./pages/Privacy";
 import { AdmLogin } from "./pages/AdmLogin";
-import { ProtectedRoute } from "./Protected";
+import { ProtectedRoute } from "./pages/Protected";
 import { AdminDashboard } from "./pages/AdmDashboard";
-import Ongs from "./pages/Ongs";
-import Ongform from "./pages/Ongform";
-import { Home } from "lucide-react";
-import { Footer } from "./Footer";
+import { Footer } from "./pages/Footer";
+import { Home } from "./pages/Home";
 
 export default function App() {
   return (
