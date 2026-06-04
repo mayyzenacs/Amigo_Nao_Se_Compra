@@ -30,9 +30,16 @@ builder.Services.ConfigureHttpJsonOptions(options => {
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
 
+var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")
+                     ?? (builder.Environment.IsProduction() 
+                         ? "https://amigonaosecompra.mayradev.me" 
+                         : "http://localhost:8080");
+
+var origins = allowedOrigins.Split(';');
+
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowReact", policy => 
-        policy.WithOrigins("http://localhost:8080")
+        policy.WithOrigins(origins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials());
