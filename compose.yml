@@ -1,19 +1,49 @@
 services:
   amigo-api:
     image: ghcr.io/mayyzenacs/amigo-api:latest
+    container_name: amigo-api
     restart: unless-stopped
     volumes:
       - ./data:/app/data
+    env_file:
+      - .env
     networks:
       - main-network
 
+    deploy:
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 256M
+        reservations:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   amigo-web:
     image: ghcr.io/mayyzenacs/amigo-web:latest
+    container_name: amigo-web
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
       - amigo-api
     networks:
       - main-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 50M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   main-network:
