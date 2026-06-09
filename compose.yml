@@ -1,29 +1,20 @@
 services:
   amigo-api:
-    build:
-      context: ./AmigoNcompra_api
-    container_name: amigo-api
-    restart: always
-    env_file:
-      - ./AmigoNcompra_api/.env
-
+    image: ghcr.io/mayyzenacs/amigo-api:latest
+    restart: unless-stopped
     volumes:
       - ./data:/app/data
-    ports:
-      - "5000:8080"
+    networks:
+      - main-network
 
   amigo-web:
-    build:
-      context: ./AmigoNcompra-web
-    container_name: amigo-web
-    restart: always
-    ports:
-      - "8080:80"
-    volumes:
-      - ./AmigoNcompra-web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    image: ghcr.io/mayyzenacs/amigo-web:latest
+    restart: unless-stopped
     depends_on:
       - amigo-api
+    networks:
+      - main-network
 
 networks:
-  default:
-    name: amigo-network
+  main-network:
+    external: true

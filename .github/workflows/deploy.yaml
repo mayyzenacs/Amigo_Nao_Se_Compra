@@ -1,0 +1,14 @@
+name: Amigo CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - "main"
+    workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
