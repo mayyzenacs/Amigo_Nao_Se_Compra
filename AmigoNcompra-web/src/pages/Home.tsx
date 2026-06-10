@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PawPrint, Info, MapPin, Search, Heart } from "lucide-react";
-import type { Pet } from "./types/api";
-import api from "./services/api";
+import type { Pet } from "../types/api";
+import api from "../services/api";
 
 export function Home() {
   const [validCities, setValidCities] = useState<string[]>([]);

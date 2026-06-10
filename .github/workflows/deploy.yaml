@@ -1,0 +1,84 @@
+name: CI/CD Pipeline - Amigo Não Se Compra
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Api
+        uses: docker/build-push-action@v7
+        with:
+          context: ./AmigoNcompra_api
+          file: ./AmigoNcompra_api/Dockerfile
+          push: true
+          tags: ghcr.io/mayyzenacs/amigo-api:latest
+
+      - name: Build & Push React
+        uses: docker/build-push-action@v7
+        with:
+          context: ./AmigoNcompra-web
+          file: ./AmigoNcompra-web/Dockerfile
+          push: true
+          tags: ghcr.io/mayyzenacs/amigo-web:latest
+
+  deploy-to-vps:
+    runs-on: ubuntu-24.04
+    needs: build-and-push
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Copy via SCP
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/${{ secrets.VPS_USER }}/amigonaosecompra/"
+          overwrite: true
+
+      - name: Injection
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e 
+
+            cd /home/${{ secrets.VPS_USER }}/amigonaosecompra
+
+            echo "${{ secrets.PROD_ENV }}" > .env
+            chmod 600 .env
+
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            docker compose pull
+            docker compose up -d --force-recreate --remove-orphans
+
+            docker image prune -f --filter "until=24h"
