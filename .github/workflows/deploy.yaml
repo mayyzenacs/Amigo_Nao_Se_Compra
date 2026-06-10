@@ -77,8 +77,8 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "compose.yaml"
-          target: "/home/${{ secrets.VPS_USER }}/amigonaosecompra/"
+          source: "compose.yml"
+          target: "/home/${{ secrets.VPS_USER }}/nginx/sites/amigonaosecompra/"
           overwrite: true
 
       - name: Inject Secrets and Execute Remote Deploy
