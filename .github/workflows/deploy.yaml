@@ -28,16 +28,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push Api
-        uses: docker/build-push-action@v7
+      - name: Build and Push API (.NET)
+        uses: docker/build-push-action@v6
         with:
           context: ./AmigoNcompra_api
           file: ./AmigoNcompra_api/Dockerfile
           push: true
           tags: ghcr.io/mayyzenacs/amigo-api:latest
 
-      - name: Build & Push React
-        uses: docker/build-push-action@v7
+      - name: Build and Push Web (React)
+        uses: docker/build-push-action@v6
         with:
           context: ./AmigoNcompra-web
           file: ./AmigoNcompra-web/Dockerfile
@@ -45,24 +45,43 @@ jobs:
           tags: ghcr.io/mayyzenacs/amigo-web:latest
 
   deploy-to-vps:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: build-and-push
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Copy via SCP
+      - name: Deploy Nginx Master Config
         uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "amigo.conf"
+          target: "/home/${{ secrets.VPS_USER }}/nginx/sites_conf/"
+
+      - name: Deploy Security Snippets
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "snippets/csp_amigo.conf"
+          target: "/home/${{ secrets.VPS_USER }}/nginx/snippets/"
+          strip_components: 1
+
+      - name: Deploy Project Infrastructure Manifest
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "compose.yaml"
           target: "/home/${{ secrets.VPS_USER }}/amigonaosecompra/"
           overwrite: true
 
-      - name: Injection
+      - name: Inject Secrets and Execute Remote Deploy
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -82,3 +101,5 @@ jobs:
             docker compose up -d --force-recreate --remove-orphans
 
             docker image prune -f --filter "until=24h"
+
+            docker exec nginx_master nginx -s reload
