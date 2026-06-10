@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     networks:
-      - main-network
+      - main_network
 
     deploy:
       resources:
@@ -32,7 +32,7 @@ services:
     depends_on:
       - amigo-api
     networks:
-      - main-network
+      - main_network
 
     deploy:
       resources:
@@ -46,5 +46,5 @@ services:
         max-file: "3"
 
 networks:
-  main-network:
+  main_network:
     external: true
