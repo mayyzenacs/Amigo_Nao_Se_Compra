@@ -91,7 +91,7 @@ apiGroup.MapPetEndpoints();
 
 app.MapGet("/health", () => Results.Ok());
 
-await SeedCities(app);
+_ = Task.Run(async () => await SeedCities(app)); 
 
 async Task SeedCities(WebApplication app)
 {

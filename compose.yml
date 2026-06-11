@@ -9,6 +9,12 @@ services:
       - .env
     networks:
       - main_network
+    healthcheck:
+      test: "wget -qO- http://127.0.0.1:8080/health || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
 
     logging:
       driver: "json-file"
@@ -23,7 +29,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - amigo-api
+      amigo-api:
+        condition: service_healthy
     networks:
       - main_network
 
