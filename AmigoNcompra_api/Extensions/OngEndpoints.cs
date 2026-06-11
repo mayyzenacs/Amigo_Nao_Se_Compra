@@ -7,6 +7,7 @@ using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using System.Text.Json;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AmigoNcompra_api.Extensions;
 
@@ -15,8 +16,6 @@ public static class OngEndpoints
     public static void MapOngEndpoints(this IEndpointRouteBuilder app)
     {
         var publicGroup = app.MapGroup("/ongs").RequireRateLimiting("fixed");
-
-        publicGroup.MapGet("/", GetOngPages);
 
         publicGroup.MapGet("search", async (string? city, AppDbContext db) =>
         {
@@ -52,6 +51,8 @@ public static class OngEndpoints
         });
 
         var adminGroup = app.MapGroup("/ongs").RequireAuthorization("AdminOnly").RequireRateLimiting("strict");
+
+        adminGroup.MapGet("/", GetOngPages);
 
         adminGroup.MapPost("add", async (OngRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
@@ -174,8 +175,23 @@ public static class OngEndpoints
             return Results.Problem("ERR_MESSAGE_NOT_DELIVERED");
         }).RequireRateLimiting("strict");
 
-        app.MapGet("cities/list", async (AppDbContext db) => await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync());
-    
+        app.MapGet("cities/list", async (AppDbContext db, IMemoryCache cache) => 
+        {
+            const string cacheKey = "all_cities_list";
+
+            if (!cache.TryGetValue(cacheKey, out List<string>? cities))
+            {
+                cities = await db.Cities.AsNoTracking().Select(c => c.Name).ToListAsync();
+
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(24));
+
+                cache.Set(cacheKey, cities, cacheOptions);
+            }
+
+            return Results.Ok(cities);
+        });
+            
         }
     private static async Task<IResult> GetOngPages(
         int page = 1, 

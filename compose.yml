@@ -3,11 +3,6 @@ services:
     image: ghcr.io/mayyzenacs/amigo-api:latest
     container_name: amigo-api
     restart: unless-stopped
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - DOTNET_gcServer=0
-      - DOTNET_ThreadPool__MinThreads=2
-      - DOTNET_ThreadPool__MaxThreads=15
     volumes:
       - ./data:/app/data
     env_file:

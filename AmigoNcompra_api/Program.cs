@@ -55,6 +55,8 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 
 app.UseCors("AllowReact");

@@ -12,9 +12,6 @@ public static class PetEndpoints
     public static void MapPetEndpoints(this IEndpointRouteBuilder app)
     {
         var publicGroup = app.MapGroup("/pets").RequireRateLimiting("fixed");
-
-        publicGroup.MapGet("/", async (AppDbContext db) => 
-            await db.Pets.AsNoTracking().ToListAsync());
         
         publicGroup.MapGet("showcase", async (AppDbContext db) =>
         {
@@ -27,6 +24,8 @@ public static class PetEndpoints
         });
 
         var adminGroup = app.MapGroup("/pets").RequireRateLimiting("strict").RequireAuthorization("AdminOnly");
+
+        adminGroup.MapGet("/", async (AppDbContext db) => await db.Pets.AsNoTracking().ToListAsync());
 
         adminGroup.MapPost("add", async (PetRequest request, AppDbContext db, Cloudinary cloudinary) =>
         {
