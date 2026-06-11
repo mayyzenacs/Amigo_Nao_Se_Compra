@@ -3,6 +3,11 @@ services:
     image: ghcr.io/mayyzenacs/amigo-api:latest
     container_name: amigo-api
     restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DOTNET_gcServer=0
+      - DOTNET_ThreadPool__MinThreads=2
+      - DOTNET_ThreadPool__MaxThreads=15
     volumes:
       - ./data:/app/data
     env_file:
@@ -10,13 +15,6 @@ services:
     networks:
       - main_network
 
-    deploy:
-      resources:
-        limits:
-          cpus: "0.80"
-          memory: 256M
-        reservations:
-          memory: 128M
     logging:
       driver: "json-file"
       options:
@@ -34,11 +32,6 @@ services:
     networks:
       - main_network
 
-    deploy:
-      resources:
-        limits:
-          cpus: "0.30"
-          memory: 50M
     logging:
       driver: "json-file"
       options:
