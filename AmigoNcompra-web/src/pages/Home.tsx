@@ -8,39 +8,49 @@ export function Home() {
   const [validCities, setValidCities] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [suggestion, setSuggestion] = useState("");
+  const [isCityValid, setIsCityValid] = useState(false);
   const [pets, setPets] = useState<Pet[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     api
-      .get<string[]>("cities/list")
-      .then((res) => setValidCities(res.data))
-      .catch((err) => console.error("Erro ao carregar cidades:", err));
-    api
       .get<Pet[]>("pets/showcase")
       .then((res) => setPets(res.data.slice(0, 10)))
       .catch((err) => console.error("Erro ao carregar pets:", err));
-  }, []);
 
-  const isCityValid = validCities.some(
-    (c) => c.toLowerCase() === city.trim().toLowerCase(),
-  );
+    const cachedCities = sessionStorage.getItem("@amigo/cities");
+
+    if (cachedCities) {
+      setValidCities(JSON.parse(cachedCities));
+    } else {
+      api
+        .get<string[]>("cities/list")
+        .then((res) => {
+          setValidCities(res.data);
+          sessionStorage.setItem("@amigo/cities", JSON.stringify(res.data));
+        })
+        .catch((err) => console.error("Erro ao carregar cidades:", err));
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setCity(value);
 
-    if (value.length > 0) {
-      const match = validCities.find((c) =>
-        c.toLowerCase().startsWith(value.toLowerCase()),
-      );
+    const trimmedValue = value.trim().toLowerCase();
 
-      if (match) {
-        setSuggestion(match);
-      } else {
-        setSuggestion("");
-      }
+    if (trimmedValue.length >= 2) {
+      const exactMatch = validCities.some(
+        (c) => c.toLowerCase() === trimmedValue,
+      );
+      setIsCityValid(exactMatch);
+
+      const match = validCities.find((c) =>
+        c.toLowerCase().startsWith(trimmedValue),
+      );
+      setSuggestion(match || "");
     } else {
+      setIsCityValid(false);
       setSuggestion("");
     }
   };
@@ -51,6 +61,7 @@ export function Home() {
     if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion) {
       e.preventDefault();
       setCity(suggestion);
+      setIsCityValid(true);
       setSuggestion("");
     }
   };
@@ -61,6 +72,7 @@ export function Home() {
       navigate(`/ongs?city=${encodeURIComponent(trimmedCity)}`);
     }
   };
+
   return (
     <div className="min-h-screen bg-orange-50 text-slate-800 font-sans selection:bg-orange-200">
       <section className="w-full bg-black py-12 md:py-16 text-white relative overflow-hidden border-b-8 border-orange-700/30">
@@ -159,7 +171,7 @@ export function Home() {
             <div className="flex-1 relative group">
               <MapPin
                 className={`absolute left-6 top-1/2 -translate-y-1/2 z-30 transition-colors ${
-                  !isCityValid && city
+                  !isCityValid && city.length >= 3
                     ? "text-red-400"
                     : "text-slate-400 group-focus-within:text-orange-500"
                 }`}
@@ -186,7 +198,7 @@ export function Home() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 className={`w-full border-2 rounded-2xl p-6 pl-16 text-lg font-semibold focus:outline-none transition-all shadow-inner relative z-20 bg-transparent ${
-                  !isCityValid && city
+                  !isCityValid && city.length >= 3
                     ? "border-red-200 focus:border-red-400 bg-slate-50/50"
                     : "border-slate-100 focus:border-orange-400 focus:bg-white bg-slate-50"
                 }`}
@@ -203,7 +215,7 @@ export function Home() {
             </button>
           </div>
 
-          {!isCityValid && city.length > 2 && (
+          {!isCityValid && city.length >= 3 && (
             <p className="text-red-500 font-bold text-sm mt-3 ml-2 animate-pulse">
               ⚠️ Esta cidade não foi encontrada. Verifique a grafia!
             </p>

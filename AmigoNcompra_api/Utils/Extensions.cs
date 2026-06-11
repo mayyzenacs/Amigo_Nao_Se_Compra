@@ -42,10 +42,10 @@ public static class Extensions
             {
                 return RateLimitPartition.GetSlidingWindowLimiter("global-limit", _ => new SlidingWindowRateLimiterOptions
                 {
-                    PermitLimit = 300,
+                    PermitLimit = 500,
                     Window = TimeSpan.FromSeconds(10),
                     SegmentsPerWindow = 2,
-                    QueueLimit = 0,
+                    QueueLimit = 100,
                     AutoReplenishment = true
                 });
             });
@@ -54,20 +54,20 @@ public static class Extensions
                 partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 factory: _ => new TokenBucketRateLimiterOptions
                 {
-                    TokenLimit = 20,         
-                    TokensPerPeriod = 5,     
+                    TokenLimit = 40,         
+                    TokensPerPeriod = 10,     
                     ReplenishmentPeriod = TimeSpan.FromSeconds(15),
-                    QueueLimit = 0,
+                    QueueLimit = 20,
                 }));
 
             options.AddPolicy("strict", httpContext => RateLimitPartition.GetSlidingWindowLimiter(
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                     factory: _ => new SlidingWindowRateLimiterOptions
                     {
-                        PermitLimit = 3, 
+                        PermitLimit = 5, 
                         Window = TimeSpan.FromMinutes(1),
-                        SegmentsPerWindow = 3, 
-                        QueueLimit = 0,
+                        SegmentsPerWindow = 6, 
+                        QueueLimit = 5,
                         AutoReplenishment = true
                     }));
 
