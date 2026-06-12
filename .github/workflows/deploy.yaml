@@ -28,7 +28,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push API (.NET)
+      - name: Build and Push API (
         uses: docker/build-push-action@v6
         with:
           context: ./AmigoNcompra_api
@@ -36,7 +36,7 @@ jobs:
           push: true
           tags: ghcr.io/mayyzenacs/amigo-api:latest
 
-      - name: Build and Push Web (React)
+      - name: Build and Push Web
         uses: docker/build-push-action@v6
         with:
           context: ./AmigoNcompra-web
@@ -90,11 +90,7 @@ jobs:
           script: |
             set -e 
 
-<<<<<<< HEAD
-            cd /home/${{ secrets.VPS_USER }}/amigonaosecompra
-=======
             cd /home/${{ secrets.VPS_USER }}/nginx/sites/amigonaosecompra
->>>>>>> f507784 (add swagger for development)
 
             echo "${{ secrets.PROD_ENV }}" > .env
             chmod 600 .env
