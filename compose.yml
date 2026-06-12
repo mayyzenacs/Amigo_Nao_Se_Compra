@@ -3,6 +3,8 @@ services:
     image: ghcr.io/mayyzenacs/amigo-api:latest
     container_name: amigo-api
     restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
     volumes:
       - ./data:/app/data
     env_file:

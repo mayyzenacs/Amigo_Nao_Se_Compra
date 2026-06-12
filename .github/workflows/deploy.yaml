@@ -90,7 +90,11 @@ jobs:
           script: |
             set -e 
 
+<<<<<<< HEAD
             cd /home/${{ secrets.VPS_USER }}/amigonaosecompra
+=======
+            cd /home/${{ secrets.VPS_USER }}/nginx/sites/amigonaosecompra
+>>>>>>> f507784 (add swagger for development)
 
             echo "${{ secrets.PROD_ENV }}" > .env
             chmod 600 .env
