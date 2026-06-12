@@ -90,7 +90,6 @@ jobs:
           script: |
             set -e 
 
-            # Caminho absoluto corrigido com a pasta nginx
             cd /home/${{ secrets.VPS_USER }}/nginx/sites/amigonaosecompra
 
             echo "${{ secrets.PROD_ENV }}" > .env
