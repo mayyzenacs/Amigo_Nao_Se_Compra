@@ -1,3 +1,5 @@
+import logoFooter from "../assets/logo.webp";
+
 export const Footer = () => {
   return (
     <footer className="w-full bg-white border-t border-orange-100 pt-16 pb-8">
@@ -7,7 +9,7 @@ export const Footer = () => {
             <div className="flex items-center gap-2 text-orange-600 font-black uppercase tracking-tighter text-2xl mb-6">
               <span>
                 <img
-                  src="./src/public/amigo_grande.png"
+                  src={logoFooter}
                   className="lg:w-39 h-auto object-contain"
                 ></img>
               </span>
