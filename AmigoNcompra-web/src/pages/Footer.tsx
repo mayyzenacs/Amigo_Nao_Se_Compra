@@ -6,7 +6,10 @@ export const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 text-orange-600 font-black uppercase tracking-tighter text-2xl mb-6">
               <span>
-                Amigo <span className="text-black"> Não</span> se Compra
+                <img
+                  src="./src/public/amigo_grande.png"
+                  className="lg:w-39 h-auto object-contain"
+                ></img>
               </span>
             </div>
             <p className="text-slate-500 font-medium leading-relaxed max-w-sm">

@@ -16,20 +16,23 @@
 
 Uma plataforma dedicada a conectar protetores e ONGs de animais a pessoas que buscam adotar e doar, combatendo o comércio irresponsável e promovendo a adoção consciente.
 
-Esta plataforma foi desenvolvida para o projeto de extensão universitário de Engenharia de Software. 
+Esta plataforma foi desenvolvida para o projeto de extensão universitário de Engenharia de Software.
 
 ## Stack Tecnológica
 
 ### Backend
-* **.NET 10:** MinimalAPI completa com autentificação JWT.
-* **Entity Framework Core:** ORM com migrations.
-* **SQLite:** Banco de dados leve e compacto escolhido pelo desafio de subir o site em uma VPS de apenas 512MB de ram.
+
+- **.NET 10:** MinimalAPI completa com autentificação JWT.
+- **Entity Framework Core:** ORM com migrations.
+- **SQLite:** Banco de dados leve e compacto escolhido pelo desafio de subir o site em uma VPS de apenas 512MB de ram.
 
 ### Frontend
-* **React 19, Typescript, Tailwind CSS**
+
+- **React 19, Typescript, Tailwind CSS**
 
 ### Infraestrutura & DevOps
-* **Docker Compose:** Multi-stage integrando os serviços.
-* **Nginx:** Proxy reverso e servidor web apoiado por um Nginx Master container na VPS.
-* **GitHub Actions:** Pipeline de CI/CD automatizado.
-* **Cloudflare:** Camada de segurança e aceleração (DNS, Proxy e Web Analytics).
+
+- **Docker Compose:** Multi-stage integrando os serviços.
+- **Nginx:** Proxy reverso e servidor web apoiado por um Nginx Master container na VPS.
+- **GitHub Actions:** Pipeline de CI/CD automatizado.
+- **Cloudflare:** Camada de segurança e aceleração (DNS, Proxy e Web Analytics).
