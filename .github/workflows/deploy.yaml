@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -45,7 +45,7 @@ jobs:
           tags: ghcr.io/mayyzenacs/amigo-web:latest
 
   deploy-to-vps:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04-arm
     needs: build-and-push
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     steps:
