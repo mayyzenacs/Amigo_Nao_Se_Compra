@@ -145,7 +145,7 @@ public static class OngEndpoints
 
             var discordMessage = new
             {
-                username = "Amigo Não Se Compra - BotBob",
+                username = "Amigo Não Se Compra - Bot",
                 avatar_url = "",
                 embeds = new[]
                 {new

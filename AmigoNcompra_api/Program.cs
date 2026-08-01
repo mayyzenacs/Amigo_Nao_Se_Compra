@@ -60,6 +60,11 @@ builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddOutputCache(options =>
+{
+    options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(2)));
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -97,6 +102,8 @@ var apiGroup = app.MapGroup("/api");
 apiGroup.MapAuthEndpoints();
 apiGroup.MapOngEndpoints();
 apiGroup.MapPetEndpoints();
+
+app.UseOutputCache();
 
 app.MapGet("/health", () => Results.Ok());
 

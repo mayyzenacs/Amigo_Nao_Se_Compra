@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AmigoNcompra_api.Extensions;
 
+public record ShowcasePetDto(string Name, string Photo);
+
 public static class PetEndpoints
 {
     public static void MapPetEndpoints(this IEndpointRouteBuilder app)
@@ -19,9 +21,11 @@ public static class PetEndpoints
                 .AsNoTracking()
                 .OrderBy(o => EF.Functions.Random()) 
                 .Take(10)
+                .Select(p => new ShowcasePetDto(p.Name, p.Photo)) 
                 .ToListAsync();
+
             return Results.Ok(randomShowcase);
-        });
+        }).CacheOutput(x => x.Expire(TimeSpan.FromMinutes(2)));
 
         var adminGroup = app.MapGroup("/pets").RequireRateLimiting("strict").RequireAuthorization("AdminOnly");
 
